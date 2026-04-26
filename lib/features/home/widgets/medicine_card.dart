@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:yakssok_front/core/constants/app_colors.dart';
+import 'package:yakssok_front/core/constants/app_dimensions.dart';
 
 enum MedicineCardTone { blue, green, red }
 
@@ -25,69 +27,81 @@ class MedicineCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final palette = switch (tone) {
-      MedicineCardTone.blue => _MedicinePalette(
-        background: const Color(0xFFEFF6FF),
-        border: const Color(0xFFB8D5FF),
-        chipBackground: const Color(0xFF2E66E8),
+      MedicineCardTone.blue => const _MedicinePalette(
+        background: AppColors.medicineBlueBg,
+        border: AppColors.medicineBlueBorder,
+        chipBackground: AppColors.medicineBlueChip,
         chipForeground: Colors.white,
-        titleColor: const Color(0xFF0D2D8B),
-        bodyColor: const Color(0xFF244CB3),
-        buttonBackground: const Color(0xFF2F66E8),
+        titleColor: AppColors.medicineBlueTitle,
+        bodyColor: AppColors.medicineBlueBody,
+        buttonBackground: AppColors.medicineBlueButton,
         buttonForeground: Colors.white,
         iconBackground: Colors.white,
-        iconColor: const Color(0xFF2F66E8),
+        iconColor: AppColors.medicineBlueIcon,
         outlinedButton: false,
       ),
-      MedicineCardTone.green => _MedicinePalette(
-        background: const Color(0xFFEFFFF0),
-        border: const Color(0xFFA7F0BF),
-        chipBackground: const Color(0xFF11A845),
+      MedicineCardTone.green => const _MedicinePalette(
+        background: AppColors.medicineGreenBg,
+        border: AppColors.medicineGreenBorder,
+        chipBackground: AppColors.medicineGreenChip,
         chipForeground: Colors.white,
-        titleColor: const Color(0xFF14321A),
-        bodyColor: const Color(0xFF1C6E31),
+        titleColor: AppColors.medicineGreenTitle,
+        bodyColor: AppColors.medicineGreenBody,
         buttonBackground: Colors.white,
-        buttonForeground: const Color(0xFF08A138),
+        buttonForeground: AppColors.medicineGreenButton,
         iconBackground: Colors.white,
-        iconColor: const Color(0xFF18A74A),
+        iconColor: AppColors.medicineGreenIcon,
         outlinedButton: true,
       ),
-      MedicineCardTone.red => _MedicinePalette(
-        background: const Color(0xFFFFEEF0),
-        border: const Color(0xFFFFBEC5),
-        chipBackground: const Color(0xFFEE2C2C),
+      MedicineCardTone.red => const _MedicinePalette(
+        background: AppColors.medicineRedBg,
+        border: AppColors.medicineRedBorder,
+        chipBackground: AppColors.medicineRedChip,
         chipForeground: Colors.white,
-        titleColor: const Color(0xFF661A1D),
-        bodyColor: const Color(0xFFC8272A),
-        buttonBackground: const Color(0xFFF12D29),
+        titleColor: AppColors.medicineRedTitle,
+        bodyColor: AppColors.medicineRedBody,
+        buttonBackground: AppColors.medicineRedButton,
         buttonForeground: Colors.white,
         iconBackground: Colors.white,
-        iconColor: const Color(0xFFF12D29),
+        iconColor: AppColors.medicineRedIcon,
         outlinedButton: false,
       ),
     };
 
     return Container(
-      padding: const EdgeInsets.fromLTRB(22, 18, 22, 20),
+      padding: const EdgeInsets.fromLTRB(
+        AppDimensions.medicineCardPaddingL,
+        AppDimensions.medicineCardPaddingT,
+        AppDimensions.medicineCardPaddingR,
+        AppDimensions.medicineCardPaddingB,
+      ),
       decoration: BoxDecoration(
         color: palette.background,
-        borderRadius: BorderRadius.circular(30),
-        border: Border.all(color: palette.border, width: 2),
+        borderRadius: BorderRadius.circular(AppDimensions.radiusCard),
+        border: Border.all(
+          color: palette.border,
+          width: AppDimensions.medicineCardBorderWidth,
+        ),
       ),
       child: Column(
         children: [
           Row(
             children: [
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppDimensions.medicineChipPaddingH,
+                  vertical: AppDimensions.medicineChipPaddingV,
+                ),
                 decoration: BoxDecoration(
                   color: palette.chipBackground,
-                  borderRadius: BorderRadius.circular(18),
+                  borderRadius:
+                      BorderRadius.circular(AppDimensions.radiusChip),
                 ),
                 child: Text(
                   chipText,
                   style: TextStyle(
                     color: palette.chipForeground,
-                    fontSize: 15,
+                    fontSize: AppDimensions.fontSizeChip,
                     fontWeight: FontWeight.w800,
                   ),
                 ),
@@ -97,33 +111,38 @@ class MedicineCard extends StatelessWidget {
                 timeText,
                 style: TextStyle(
                   color: palette.titleColor,
-                  fontSize: 18,
+                  fontSize: AppDimensions.fontSizeTime,
                   fontWeight: FontWeight.w900,
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 18),
+          const SizedBox(height: AppDimensions.spaceM),
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Container(
-                width: 68,
-                height: 68,
+                width: AppDimensions.medicineIconContainerSize,
+                height: AppDimensions.medicineIconContainerSize,
                 decoration: BoxDecoration(
                   color: palette.iconBackground,
-                  borderRadius: BorderRadius.circular(16),
+                  borderRadius:
+                      BorderRadius.circular(AppDimensions.radiusIconContainer),
                   boxShadow: const [
                     BoxShadow(
-                      color: Color(0x11000000),
-                      blurRadius: 8,
-                      offset: Offset(0, 4),
+                      color: AppColors.shadowLight,
+                      blurRadius: AppDimensions.shadowBlurRadius,
+                      offset: Offset(0, AppDimensions.shadowOffsetY),
                     ),
                   ],
                 ),
-                child: Icon(icon, color: palette.iconColor, size: 34),
+                child: Icon(
+                  icon,
+                  color: palette.iconColor,
+                  size: AppDimensions.medicineIconSize,
+                ),
               ),
-              const SizedBox(width: 18),
+              const SizedBox(width: AppDimensions.spaceM),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -132,18 +151,18 @@ class MedicineCard extends StatelessWidget {
                       title,
                       style: TextStyle(
                         color: palette.titleColor,
-                        fontSize: 24,
-                        height: 1.1,
+                        fontSize: AppDimensions.fontSizeTitle,
+                        height: AppDimensions.lineHeightTitle,
                         fontWeight: FontWeight.w900,
                       ),
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: AppDimensions.spaceXs),
                     Text(
                       description,
                       style: TextStyle(
                         color: palette.bodyColor,
-                        fontSize: 15,
-                        height: 1.35,
+                        fontSize: AppDimensions.fontSizeBody,
+                        height: AppDimensions.lineHeightBody,
                         fontWeight: FontWeight.w700,
                       ),
                     ),
@@ -152,10 +171,10 @@ class MedicineCard extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 18),
+          const SizedBox(height: AppDimensions.spaceM),
           SizedBox(
             width: double.infinity,
-            height: 54,
+            height: AppDimensions.medicineButtonHeight,
             child: FilledButton.icon(
               onPressed: () {},
               style: FilledButton.styleFrom(
@@ -163,22 +182,26 @@ class MedicineCard extends StatelessWidget {
                 foregroundColor: palette.buttonForeground,
                 elevation: 0,
                 side: palette.outlinedButton
-                    ? const BorderSide(color: Color(0xFF08A138), width: 3)
+                    ? const BorderSide(
+                        color: AppColors.medicineGreenButton,
+                        width: AppDimensions.medicineButtonBorderWidth,
+                      )
                     : null,
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(28),
+                  borderRadius:
+                      BorderRadius.circular(AppDimensions.radiusButton),
                 ),
               ),
               icon: Icon(
                 tone == MedicineCardTone.blue
                     ? Icons.done_all_rounded
                     : Icons.check_rounded,
-                size: 22,
+                size: AppDimensions.buttonIconSize,
               ),
               label: Text(
                 buttonText,
                 style: const TextStyle(
-                  fontSize: 18,
+                  fontSize: AppDimensions.fontSizeButton,
                   fontWeight: FontWeight.w900,
                 ),
               ),

@@ -6,12 +6,12 @@ class CalendarScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
+    return const SafeArea(
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(18, 18, 18, 24),
+        padding: EdgeInsets.fromLTRB(18, 18, 18, 24),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
-          children: const [
+          children: [
             AppHeader(
               title: 'Calendar',
               leadingIcon: Icons.calendar_month_rounded,

@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:yakssok_front/core/constants/app_colors.dart';
+import 'package:yakssok_front/core/constants/app_dimensions.dart';
+import 'package:yakssok_front/core/constants/app_strings.dart';
 import 'package:yakssok_front/features/home/data/home_mock_data.dart';
 import 'package:yakssok_front/features/home/models/today_medicine.dart';
 import 'package:yakssok_front/features/home/widgets/health_summary_section.dart';
@@ -21,7 +24,6 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
-    // Load today's medicine list once when the screen opens.
     _todayMedicinesFuture = fetchTodayMedicines();
   }
 
@@ -31,10 +33,10 @@ class _HomeScreenState extends State<HomeScreen> {
       backgroundColor: Colors.white,
       floatingActionButton: FloatingActionButton(
         onPressed: () {},
-        backgroundColor: const Color(0xFF0A7A33),
+        backgroundColor: AppColors.fabGreen,
         foregroundColor: Colors.white,
         shape: const CircleBorder(),
-        child: const Icon(Icons.add, size: 34),
+        child: const Icon(Icons.add, size: AppDimensions.fabIconSize),
       ),
       body: SafeArea(
         child: FutureBuilder<List<TodayMedicine>>(
@@ -43,43 +45,50 @@ class _HomeScreenState extends State<HomeScreen> {
             final medicines = snapshot.data ?? const <TodayMedicine>[];
 
             return ListView(
-              padding: const EdgeInsets.fromLTRB(18, 18, 18, 108),
+              padding: const EdgeInsets.fromLTRB(
+                AppDimensions.homeListPaddingH,
+                AppDimensions.homeListPaddingTop,
+                AppDimensions.homeListPaddingH,
+                AppDimensions.homeListPaddingBottom,
+              ),
               children: [
                 const AppHeader(
-                  title: '약쏙',
-                  actionLabel: '집 바로가기',
+                  title: AppStrings.appTitle,
+                  actionLabel: AppStrings.homeActionLabel,
                   logoAssetPath: 'assets/yakssok_logo.png',
-                  logoWidth: 44,
-                  logoHeight: 44,
+                  logoWidth: AppDimensions.appLogoSize,
+                  logoHeight: AppDimensions.appLogoSize,
                 ),
-                const SizedBox(height: 22),
+                const SizedBox(height: AppDimensions.spaceXl),
                 const HomeGreetingSection(),
-                const SizedBox(height: 20),
+                const SizedBox(height: AppDimensions.spaceL),
                 const HomeProgressCard(),
-                const SizedBox(height: 26),
+                const SizedBox(height: AppDimensions.spaceXxl),
                 const HomeSectionHeader(
-                  title: '오늘의 약',
-                  actionText: '전체 일정',
+                  title: AppStrings.todayMedicine,
+                  actionText: AppStrings.fullSchedule,
                 ),
-                const SizedBox(height: 14),
+                const SizedBox(height: AppDimensions.spaceS),
                 if (snapshot.connectionState == ConnectionState.waiting)
                   const Center(
                     child: Padding(
-                      padding: EdgeInsets.symmetric(vertical: 32),
+                      padding: EdgeInsets.symmetric(
+                        vertical: AppDimensions.loadingPaddingV,
+                      ),
                       child: CircularProgressIndicator(),
                     ),
                   )
                 else if (snapshot.hasError)
                   const _MedicineStatusCard(
-                    message: '오늘의 약 정보를 불러오지 못했어요.',
+                    message: AppStrings.medicineLoadError,
                   )
                 else if (medicines.isEmpty)
                   const _MedicineStatusCard(
-                    message: '오늘은 복용할 약이 없어요.',
+                    message: AppStrings.medicineEmpty,
                   )
                 else
                   ..._buildMedicineCards(medicines),
-                const SizedBox(height: 26),
+                const SizedBox(height: AppDimensions.spaceXxl),
                 const HealthSummarySection(),
               ],
             );
@@ -90,7 +99,6 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   List<Widget> _buildMedicineCards(List<TodayMedicine> medicines) {
-    // Convert fetched data into card widgets for the list.
     return [
       for (var index = 0; index < medicines.length; index++) ...[
         MedicineCard(
@@ -102,7 +110,8 @@ class _HomeScreenState extends State<HomeScreen> {
           buttonText: medicines[index].buttonText,
           icon: medicines[index].icon,
         ),
-        if (index != medicines.length - 1) const SizedBox(height: 18),
+        if (index != medicines.length - 1)
+          const SizedBox(height: AppDimensions.spaceM),
       ],
     ];
   }
@@ -116,17 +125,20 @@ class _MedicineStatusCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 28),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppDimensions.statusCardPaddingH,
+        vertical: AppDimensions.statusCardPaddingV,
+      ),
       decoration: BoxDecoration(
-        color: const Color(0xFFF5F7FB),
-        borderRadius: BorderRadius.circular(24),
+        color: AppColors.medicineStatusCardBg,
+        borderRadius: BorderRadius.circular(AppDimensions.radiusStatusCard),
       ),
       child: Text(
         message,
         textAlign: TextAlign.center,
         style: const TextStyle(
-          color: Color(0xFF516074),
-          fontSize: 16,
+          color: AppColors.medicineStatusCardText,
+          fontSize: AppDimensions.statusCardFontSize,
           fontWeight: FontWeight.w700,
         ),
       ),
