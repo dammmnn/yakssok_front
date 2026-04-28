@@ -77,3 +77,6 @@ lib/generated_plugin_registrant.dart
 
 # Claude Code
 .claude/
+
+# Claude Code 로컬 전용
+CLAUDE.md
