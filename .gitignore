@@ -71,3 +71,6 @@ lib/generated_plugin_registrant.dart
 # 코드 생성 파일 (팀 합의: 포함)
 # *.g.dart
 # *.freezed.dart
+
+# Flutter 자동 생성 로그
+*.log
