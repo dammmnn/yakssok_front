@@ -74,3 +74,6 @@ lib/generated_plugin_registrant.dart
 
 # Flutter 자동 생성 로그
 *.log
+
+# Claude Code
+.claude/
