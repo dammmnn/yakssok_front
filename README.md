@@ -1,38 +1,81 @@
 # 약쏙 (Yak-SSok)
 
-약 복용 관리 앱 — 복약 일정 관리, 약 정보 검색, 복약 달력을 제공합니다.
+캡스톤 프로젝트 — 시니어를 위한 스마트 복약 관리 앱입니다.
+
+약 복용 알람, 약 및 약봉투 사진 촬영 시 AI가 약 정보를 자동 인식하는 기능을 제공합니다.
+큰 글씨, 직관적인 UI 등 시니어가 쉽게 사용할 수 있도록 설계했습니다.
 
 ---
 
 ## 기술 스택
 
-| 항목 | 내용 |
+| 분류 | 기술 |
 |---|---|
 | Framework | Flutter (Dart) |
-| 상태관리 | Riverpod (riverpod_annotation) |
-| 라우팅 | go_router |
-| 데이터 모델 | freezed + json_serializable |
-| 달력 | table_calendar |
-| 네트워크 | Dio |
+| 상태관리 | Riverpod (코드 생성 기반 `riverpod_annotation`) |
+| 데이터 모델 | Freezed + json_serializable (불변 객체, 코드 생성) |
+| 라우팅 | go_router (선언형 라우팅) |
+| AI / ML | Google ML Kit (약봉투 OCR 텍스트 인식) |
+| 음성 인식 | speech_to_text |
+| 지도 | Google Maps Flutter |
+| 네트워크 | Dio (REST API, 식약처 공공데이터 API) |
+| 알림 | flutter_local_notifications |
 | 로컬 저장 | shared_preferences |
+
+---
+
+## 주요 기능
+
+**복약 관리**
+- 시간대별(아침/점심/저녁/취침 전) 복약 일정 등록 및 알람
+- 복약 달력으로 월별 복용 이력 시각화
+- 복용률 및 연속 복용일 통계 제공
+
+**약 검색**
+- 음성으로 약 이름 검색
+- 카메라로 약 또는 약봉투 촬영 시 AI(OCR)가 약 정보 자동 인식
+- 챗봇 상담을 통한 약 정보 조회
+- 식약처 공공데이터 API 연동
+
+**약국 찾기**
+- 현재 위치 기반 주변 약국 지도 표시
+- 약국 목록, 거리, 전화 연결 제공
+
+**복약 안전 경고**
+- 함께 복용 시 위험한 약 조합 자동 감지 및 경고 알림
+
+**시니어 친화 UX**
+- 큰 글씨와 직관적인 레이아웃
+- 긴급 호출 버튼 상시 노출
+
+---
+
+## 개발 환경
+
+| | 요구 사항 |
+|---|---|
+| macOS | Flutter 3.x 이상, Xcode |
+| Windows | Flutter 3.x 이상, Android Studio |
 
 ---
 
 ## 시작하기
 
-**요구 사항**
-- Flutter 3.x 이상
-- Xcode (iOS 빌드용)
-
-**설치 및 실행**
+**macOS (iOS 시뮬레이터)**
 
 ```bash
-# 의존성 설치
 flutter pub get
-
-# 코드 생성 (freezed / riverpod)
-dart run build_runner build --delete-conflicting-outputs
-
-# 실행
 flutter run
 ```
+
+**Windows (Android 에뮬레이터)**
+
+```bash
+flutter pub get
+flutter run -d android
+```
+
+> 모델이나 프로바이더를 수정한 경우 아래 명령어를 먼저 실행하세요.
+> ```bash
+> dart run build_runner build --delete-conflicting-outputs
+> ```
