@@ -150,6 +150,23 @@ class AppStrings {
   static const String noScheduleForDay = '이 날 복약 일정이 없어요';
   static const String calendarTakeNow = '지금 복용';
 
+  // 더보기
+  static const String moreTitle = '설정 및 정보';
+  static const String moreSavedMedicine = '내가 저장한 약';
+  static const String moreHealthInfo = '건강 정보';
+  static const String moreMyInfo = '내 정보';
+  static const String moreSettings = '설정';
+  static const String moreDailyQuoteTitle = '오늘의 한마디';
+  static const List<String> moreDailyQuotes = [
+    '매일 제때 약을 챙기는 것, 작은 습관이 큰 건강을 만듭니다. 오늘도 잘하고 계세요!',
+    '건강은 하루아침에 만들어지지 않아요. 오늘의 작은 실천이 내일의 건강을 만듭니다.',
+    '약을 빠짐없이 챙기는 것, 그게 바로 나를 아끼는 방법이에요.',
+    '규칙적인 복약은 몸에게 보내는 가장 따뜻한 메시지예요.',
+    '오늘도 건강을 위한 한 걸음을 내디뎠군요. 정말 대단해요!',
+    '당신의 건강이 가장 소중한 자산입니다. 오늘도 꼬박꼬박 챙기세요.',
+    '작은 습관의 힘을 믿으세요. 매일의 복약이 더 건강한 내일을 만들어요.',
+  ];
+
   // 하단 탭
   static const String tabHome = '홈';
   static const String tabSearch = '검색';
@@ -175,7 +192,7 @@ class AppTheme {
       useMaterial3: true,
       colorScheme: baseScheme,
       scaffoldBackgroundColor: AppColors.background,
-      fontFamily: 'Pretendard',
+      fontFamily: 'MaruBuri',
       textTheme: const TextTheme(
         displayLarge: TextStyle(
           fontSize: 28,
