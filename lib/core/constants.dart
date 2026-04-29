@@ -14,6 +14,11 @@ class AppConstants {
     defaultValue: '',
   );
 
+  // Supabase (anon key는 공개 키로 클라이언트 노출 허용)
+  static const String supabaseUrl = 'https://okdircruppnochiszncs.supabase.co';
+  static const String supabaseAnonKey =
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9rZGlyY3J1cHBub2NoaXN6bmNzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc0MDkyMTUsImV4cCI6MjA5Mjk4NTIxNX0.xq7EHxk5_PnfUn_ArQGUgMg8KXweZ6dk5rbBftCP8FM';
+
   // 로컬 저장 키
   static const String storageKeyAuthUser = 'auth_user';
   static const String storageKeyMedicines = 'medicines';

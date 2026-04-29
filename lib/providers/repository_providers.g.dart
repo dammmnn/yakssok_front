@@ -6,12 +6,9 @@ part of 'repository_providers.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$authRepositoryHash() => r'44319c38d7920334eef94d208dfd391069d7f841';
+String _$authRepositoryHash() => r'2775a71c78125c05821c4033119fd1fbc8b371c9';
 
-/// 백엔드 교체 지점.
-/// 백엔드가 확정되면 LocalXxxRepository → RemoteXxxRepository로 한 줄만 바꾸면 된다.
-///
-/// Copied from [authRepository].
+/// See also [authRepository].
 @ProviderFor(authRepository)
 final authRepositoryProvider = Provider<AuthRepository>.internal(
   authRepository,
@@ -25,7 +22,7 @@ final authRepositoryProvider = Provider<AuthRepository>.internal(
 
 typedef AuthRepositoryRef = ProviderRef<AuthRepository>;
 String _$medicineRepositoryHash() =>
-    r'5a79664cfdbfc98eebd35002eeeb280ac5a6bc70';
+    r'cf108d44d300c159ae16be0b3cd9fc91f82dbb76';
 
 /// See also [medicineRepository].
 @ProviderFor(medicineRepository)
@@ -41,7 +38,7 @@ final medicineRepositoryProvider = Provider<MedicineRepository>.internal(
 
 typedef MedicineRepositoryRef = ProviderRef<MedicineRepository>;
 String _$scheduleRepositoryHash() =>
-    r'cd43dbc51a647f9ba527f8abf1b5410b83c6df2a';
+    r'c086c6dec5f664fcd903d01737d367827473dbe4';
 
 /// See also [scheduleRepository].
 @ProviderFor(scheduleRepository)
