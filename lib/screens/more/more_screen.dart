@@ -3,6 +3,11 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 
 import '../../core/theme.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+
+import '../auth/login_screen.dart';
+import '../my_info/my_info_screen.dart';
+import '../saved_medicine/saved_medicine_screen.dart';
 import 'widgets/more_menu_item.dart';
 
 class MoreScreen extends StatelessWidget {
@@ -74,15 +79,27 @@ class _MenuCard extends StatelessWidget {
       elevation: 0,
       child: ClipRRect(
         borderRadius: BorderRadius.circular(AppDimensions.radiusXl),
-        child: const Column(
+        child: Column(
           children: [
             MoreMenuItem(
               icon: Icons.bookmark_rounded,
               iconColor: AppColors.progressTeal,
-              iconBackgroundColor: Color(0xFFE6FAF8),
+              iconBackgroundColor: const Color(0xFFE6FAF8),
               label: AppStrings.moreSavedMedicine,
+              onTap: () {
+                final isLoggedIn =
+                    Supabase.instance.client.auth.currentSession != null;
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => isLoggedIn
+                        ? const SavedMedicineScreen()
+                        : const LoginScreen(),
+                  ),
+                );
+              },
             ),
-            MoreMenuItem(
+            const MoreMenuItem(
               icon: Icons.favorite_rounded,
               iconColor: AppColors.lunchPrimary,
               iconBackgroundColor: AppColors.lunchBg,
@@ -93,8 +110,12 @@ class _MenuCard extends StatelessWidget {
               iconColor: AppColors.morningPrimary,
               iconBackgroundColor: AppColors.morningBg,
               label: AppStrings.moreMyInfo,
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const MyInfoScreen()),
+              ),
             ),
-            MoreMenuItem(
+            const MoreMenuItem(
               icon: Icons.settings_rounded,
               iconColor: AppColors.textSecondary,
               iconBackgroundColor: AppColors.background,

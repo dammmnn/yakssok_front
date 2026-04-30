@@ -68,6 +68,22 @@ final healthRepositoryProvider = Provider<HealthRepository>.internal(
 );
 
 typedef HealthRepositoryRef = ProviderRef<HealthRepository>;
+String _$interactionRepositoryHash() =>
+    r'0427083e7203d76a223205fcac4b7b1be9cb7153';
+
+/// See also [interactionRepository].
+@ProviderFor(interactionRepository)
+final interactionRepositoryProvider = Provider<InteractionRepository>.internal(
+  interactionRepository,
+  name: r'interactionRepositoryProvider',
+  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
+      ? null
+      : _$interactionRepositoryHash,
+  dependencies: null,
+  allTransitiveDependencies: null,
+);
+
+typedef InteractionRepositoryRef = ProviderRef<InteractionRepository>;
 String _$medicineServiceHash() => r'a2da781ebd1b72110f70c849312f476c1cd364c5';
 
 /// 식약처 API 서비스. 백엔드와 무관하게 항상 사용.

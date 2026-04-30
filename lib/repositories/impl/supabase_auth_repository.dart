@@ -4,7 +4,7 @@ import '../../models/user.dart' as app;
 import '../auth_repository.dart';
 
 class SupabaseAuthRepository implements AuthRepository {
-  final _auth = Supabase.instance.client.auth;
+  GoTrueClient get _auth => Supabase.instance.client.auth;
 
   @override
   Future<app.User?> getCurrentUser() async {

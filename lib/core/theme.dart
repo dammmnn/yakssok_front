@@ -51,6 +51,11 @@ class AppColors {
   // 달력 슬롯 색상
   static const Color calendarAmber = Color(0xFFF59E0B);
 
+  // 소셜 로그인
+  static const Color kakaoYellow = Color(0xFFFEE500);
+  static const Color kakaoText = Color(0xFF191919);
+  static const Color naverGreen = Color(0xFF03C75A);
+
   // 약 검색
   static const Color searchVoiceBg = Color(0xFFEFFFEF);
   static const Color searchVoiceIconBg = Color(0xFFBDF7C9);
@@ -149,6 +154,19 @@ class AppStrings {
   static const String missedTimeSuffix = ' (지남)';
   static const String noScheduleForDay = '이 날 복약 일정이 없어요';
   static const String calendarTakeNow = '지금 복용';
+
+  // 로그인
+  static const String loginSubtitle = '의약품 인식해서 알려주는 서비스';
+  static const String loginWithEmail = '이메일로 로그인';
+  static const String loginWithKakao = '카카오 로그인';
+  static const String loginWithNaver = '네이버 로그인';
+  static const String emailHint = '이메일';
+  static const String passwordHint = '비밀번호';
+  static const String login = '로그인';
+  static const String findAccount = '아이디/비밀번호 찾기';
+  static const String signUp = '회원가입';
+  static const String loginFailedMessage = '이메일 또는 비밀번호를 확인해주세요.';
+  static const String socialLoginComingSoon = '준비 중인 서비스예요.';
 
   // 더보기
   static const String moreTitle = '설정 및 정보';

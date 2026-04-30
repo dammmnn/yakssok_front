@@ -4,7 +4,7 @@ import '../../models/medicine.dart';
 import '../medicine_repository.dart';
 
 class SupabaseMedicineRepository implements MedicineRepository {
-  final _db = Supabase.instance.client;
+  SupabaseClient get _db => Supabase.instance.client;
 
   @override
   Future<List<Medicine>> getMyMedicines() async {

@@ -30,6 +30,7 @@ dependencies:
 
   # 백엔드
   supabase_flutter: ^2.8.0
+  uuid: ^4.4.0
 
   # UI 기능
   table_calendar: ^3.1.2
@@ -57,6 +58,8 @@ flutter:
   uses-material-design: true
   assets:
     - assets/
+    - assets/kakao_login_btn.png
+    - assets/naver_login_btn.png
 
   fonts:
     - family: MaruBuri

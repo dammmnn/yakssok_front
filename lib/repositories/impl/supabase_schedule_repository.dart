@@ -5,7 +5,7 @@ import '../../models/schedule.dart';
 import '../schedule_repository.dart';
 
 class SupabaseScheduleRepository implements ScheduleRepository {
-  final _db = Supabase.instance.client;
+  SupabaseClient get _db => Supabase.instance.client;
 
   @override
   Future<List<Schedule>> getSchedulesByDate(DateTime date) async {
