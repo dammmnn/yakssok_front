@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../core/theme.dart';
 import 'calendar/calendar_screen.dart';
 import 'home/home_screen.dart';
+import 'home/widgets/add_medicine_sheet.dart';
 import 'more/more_screen.dart';
 import 'search/search_screen.dart';
 
@@ -33,7 +34,12 @@ class _MainScreenState extends ConsumerState<MainScreen> {
       body: IndexedStack(index: _index, children: _tabs),
       floatingActionButton: _index == 0
           ? FloatingActionButton(
-              onPressed: () {},
+              onPressed: () => showModalBottomSheet(
+                context: context,
+                isScrollControlled: true,
+                backgroundColor: Colors.transparent,
+                builder: (_) => const AddMedicineSheet(),
+              ),
               backgroundColor: AppColors.progressTeal,
               foregroundColor: Colors.white,
               elevation: 4,

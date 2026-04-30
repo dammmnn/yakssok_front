@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'core/theme.dart';
+import 'screens/auth/login_screen.dart';
 import 'screens/main_screen.dart';
 
-/// MaterialApp + 테마 + 라우팅.
-/// 추후 GoRouter 도입 시 [home]을 [routerConfig]로 교체.
 class YakssokApp extends StatelessWidget {
   const YakssokApp({super.key});
 
@@ -14,7 +14,29 @@ class YakssokApp extends StatelessWidget {
       title: AppStrings.appName,
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light,
-      home: const MainScreen(),
+      home: const _AuthGate(),
+    );
+  }
+}
+
+class _AuthGate extends StatelessWidget {
+  const _AuthGate();
+
+  @override
+  Widget build(BuildContext context) {
+    return StreamBuilder<AuthState>(
+      stream: Supabase.instance.client.auth.onAuthStateChange,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Scaffold(
+            body: Center(child: CircularProgressIndicator()),
+          );
+        }
+        final session = snapshot.data?.session ??
+            Supabase.instance.client.auth.currentSession;
+        if (session != null) return const MainScreen();
+        return const LoginScreen();
+      },
     );
   }
 }

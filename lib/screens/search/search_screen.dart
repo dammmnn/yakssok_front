@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../core/theme.dart';
 import '../../widgets/emergency_button.dart';
+import 'camera_screen.dart';
 
 /// 검색 탭 — 음성/카메라/챗봇 진입과 최근 검색 목록.
 class SearchScreen extends StatelessWidget {
@@ -132,7 +133,7 @@ class _SearchMethodGrid extends StatelessWidget {
           const SizedBox(width: AppDimensions.paddingXs),
           Expanded(
             flex: 3,
-            child: const Column(
+            child: Column(
               children: [
                 Expanded(
                   child: _SearchMethodCard(
@@ -142,6 +143,11 @@ class _SearchMethodGrid extends StatelessWidget {
                     icon: Icons.camera_alt_rounded,
                     title: AppStrings.cameraSearch,
                     description: AppStrings.cameraSearchDescription,
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (_) => const CameraScreen()),
+                    ),
                   ),
                 ),
                 SizedBox(height: AppDimensions.paddingXs),
@@ -173,6 +179,7 @@ class _SearchMethodCard extends StatelessWidget {
     required this.title,
     required this.description,
     this.isPrimary = false,
+    this.onTap,
   });
 
   final Color backgroundColor;
@@ -182,6 +189,7 @@ class _SearchMethodCard extends StatelessWidget {
   final String title;
   final String description;
   final bool isPrimary;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
@@ -189,7 +197,7 @@ class _SearchMethodCard extends StatelessWidget {
       color: backgroundColor,
       borderRadius: BorderRadius.circular(AppDimensions.radiusXl),
       child: InkWell(
-        onTap: () {},
+        onTap: onTap,
         borderRadius: BorderRadius.circular(AppDimensions.radiusXl),
         child: Padding(
           padding: const EdgeInsets.all(AppDimensions.paddingLg),
