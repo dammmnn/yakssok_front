@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../core/theme.dart';
 import '../../../core/utils.dart';
 import '../../../models/schedule.dart';
+import '../../medicine_detail/medicine_detail_screen.dart';
 
 /// 카드 비주얼 그룹. 슬롯/상태 조합으로 결정.
 enum _Variant { morning, lunch, evening, alert }
@@ -113,7 +114,14 @@ class MedicineCard extends StatelessWidget {
     final style = _styleFor(_variant);
     final isAlert = _variant == _Variant.alert;
 
-    return Container(
+    return GestureDetector(
+      onTap: () => Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => MedicineDetailScreen(medicine: schedule.medicine),
+        ),
+      ),
+      child: Container(
       padding: const EdgeInsets.all(AppDimensions.cardPadding),
       decoration: BoxDecoration(
         color: style.bg,
@@ -126,8 +134,13 @@ class MedicineCard extends StatelessWidget {
           const SizedBox(height: AppDimensions.paddingLg),
           _BodyRow(schedule: schedule, isAlert: isAlert),
           const SizedBox(height: AppDimensions.paddingLg),
-          _ActionButton(style: style, onPressed: onActionPressed),
+          _ActionButton(
+            style: style,
+            isTaken: schedule.status == ScheduleStatus.taken,
+            onPressed: onActionPressed,
+          ),
         ],
+      ),
       ),
     );
   }
@@ -260,9 +273,14 @@ class _MedicineThumbnail extends StatelessWidget {
 }
 
 class _ActionButton extends StatelessWidget {
-  const _ActionButton({required this.style, this.onPressed});
+  const _ActionButton({
+    required this.style,
+    required this.isTaken,
+    this.onPressed,
+  });
 
   final _VariantStyle style;
+  final bool isTaken;
   final VoidCallback? onPressed;
 
   @override
@@ -270,6 +288,30 @@ class _ActionButton extends StatelessWidget {
     final shape = RoundedRectangleBorder(
       borderRadius: BorderRadius.circular(AppDimensions.radiusPill),
     );
+
+    if (isTaken) {
+      return SizedBox(
+        width: double.infinity,
+        height: 48,
+        child: ElevatedButton.icon(
+          onPressed: null,
+          icon: const Icon(Icons.check_circle_rounded, size: 18),
+          label: const Text(
+            '복용완료',
+            style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800),
+          ),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: AppColors.progressTeal.withValues(alpha: 0.15),
+            foregroundColor: AppColors.progressTeal,
+            disabledBackgroundColor:
+                AppColors.progressTeal.withValues(alpha: 0.15),
+            disabledForegroundColor: AppColors.progressTeal,
+            elevation: 0,
+            shape: shape,
+          ),
+        ),
+      );
+    }
 
     final child = Row(
       mainAxisAlignment: MainAxisAlignment.center,
@@ -296,6 +338,11 @@ class _ActionButton extends StatelessWidget {
                 side: BorderSide(color: style.button, width: 1.5),
                 backgroundColor: AppColors.surface,
                 shape: shape,
+                splashFactory: InkRipple.splashFactory,
+              ).copyWith(
+                overlayColor: WidgetStateProperty.all(
+                  style.button.withValues(alpha: 0.12),
+                ),
               ),
               child: child,
             )
@@ -306,6 +353,11 @@ class _ActionButton extends StatelessWidget {
                 foregroundColor: style.buttonText,
                 elevation: 0,
                 shape: shape,
+                splashFactory: InkRipple.splashFactory,
+              ).copyWith(
+                overlayColor: WidgetStateProperty.all(
+                  Colors.white.withValues(alpha: 0.2),
+                ),
               ),
               child: child,
             ),

@@ -37,6 +37,12 @@ dependencies:
   google_maps_flutter: ^2.6.0
   flutter_local_notifications: ^17.2.2
 
+  # 지도 / 위치
+  flutter_naver_map: ^1.3.0
+  geolocator: ^13.0.0
+  sensors_plus: ^6.0.0
+  url_launcher: ^6.3.0
+
   # 카메라 / 음성
   camera: ^0.10.5+9
   speech_to_text: ^6.6.2

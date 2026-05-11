@@ -7,6 +7,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../auth/login_screen.dart';
 import '../my_info/my_info_screen.dart';
+import '../pharmacy/pharmacy_screen.dart';
 import '../saved_medicine/saved_medicine_screen.dart';
 import 'widgets/more_menu_item.dart';
 
@@ -98,6 +99,16 @@ class _MenuCard extends StatelessWidget {
                   ),
                 );
               },
+            ),
+            MoreMenuItem(
+              icon: Icons.local_pharmacy_rounded,
+              iconColor: const Color(0xFF7C3AED),
+              iconBackgroundColor: const Color(0xFFEDE9FE),
+              label: '약국 찾기',
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const PharmacyScreen()),
+              ),
             ),
             const MoreMenuItem(
               icon: Icons.favorite_rounded,

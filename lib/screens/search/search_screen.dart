@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
 
 import '../../core/theme.dart';
+import '../../models/medicine.dart';
 import '../../widgets/emergency_button.dart';
+import '../medicine_detail/medicine_detail_screen.dart';
 import 'camera_screen.dart';
+import 'chatbot_screen.dart';
+import 'voice_search_screen.dart';
 
 /// 검색 탭 — 음성/카메라/챗봇 진입과 최근 검색 목록.
 class SearchScreen extends StatelessWidget {
@@ -118,7 +122,7 @@ class _SearchMethodGrid extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const Expanded(
+          Expanded(
             flex: 4,
             child: _SearchMethodCard(
               backgroundColor: AppColors.searchVoiceBg,
@@ -128,6 +132,10 @@ class _SearchMethodGrid extends StatelessWidget {
               title: AppStrings.voiceSearch,
               description: AppStrings.voiceSearchDescription,
               isPrimary: true,
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const VoiceSearchScreen()),
+              ),
             ),
           ),
           const SizedBox(width: AppDimensions.paddingXs),
@@ -150,7 +158,7 @@ class _SearchMethodGrid extends StatelessWidget {
                     ),
                   ),
                 ),
-                SizedBox(height: AppDimensions.paddingXs),
+                const SizedBox(height: AppDimensions.paddingXs),
                 Expanded(
                   child: _SearchMethodCard(
                     backgroundColor: AppColors.searchChatBg,
@@ -159,6 +167,11 @@ class _SearchMethodGrid extends StatelessWidget {
                     icon: Icons.smart_toy_rounded,
                     title: AppStrings.chatSearch,
                     description: AppStrings.chatSearchDescription,
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (_) => const ChatbotScreen()),
+                    ),
                   ),
                 ),
               ],
@@ -337,7 +350,18 @@ class _RecentMedicineCard extends StatelessWidget {
       color: AppColors.surface,
       borderRadius: BorderRadius.circular(AppDimensions.radiusXl),
       child: InkWell(
-        onTap: () {},
+        onTap: () => Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => MedicineDetailScreen(
+              medicine: Medicine(
+                id: item.name,
+                name: item.name,
+                dosage: item.dosage,
+              ),
+            ),
+          ),
+        ),
         borderRadius: BorderRadius.circular(AppDimensions.radiusXl),
         child: Padding(
           padding: const EdgeInsets.fromLTRB(

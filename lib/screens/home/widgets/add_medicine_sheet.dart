@@ -13,13 +13,18 @@ class AddMedicineSheet extends ConsumerStatefulWidget {
   ConsumerState<AddMedicineSheet> createState() => _AddMedicineSheetState();
 }
 
+enum _FrequencyType { daily, weekly, interval }
+
 class _AddMedicineSheetState extends ConsumerState<AddMedicineSheet> {
   final _searchController = TextEditingController();
   Medicine? _selectedMedicine;
-  ScheduleSlot? _selectedSlot;
+  final Set<ScheduleSlot> _selectedSlots = {};
   int _doseCount = 1;
 
-  // 검색 결과 (추후 API 연동 예정 — 현재 mock)
+  _FrequencyType _frequencyType = _FrequencyType.daily;
+  final Set<int> _selectedDays = {0, 1, 2, 3, 4, 5, 6}; // 0=월 ~ 6=일
+  int _intervalDays = 2;
+
   List<Medicine> _searchResults = [];
 
   static const _mockMedicines = [
@@ -73,21 +78,37 @@ class _AddMedicineSheetState extends ConsumerState<AddMedicineSheet> {
   }
 
   Future<void> _onAdd() async {
-    if (_selectedMedicine == null || _selectedSlot == null) return;
-    await ref.read(savedMedicineControllerProvider.notifier).add(
-          medicineName: _selectedMedicine!.name,
-          company: _selectedMedicine!.company,
-          description: _selectedMedicine!.description,
-          imageUrl: _selectedMedicine!.imageUrl,
-          slot: _selectedSlot!,
-          doseCount: _doseCount,
-        );
-    if (mounted) Navigator.pop(context);
+    if (_selectedMedicine == null || _selectedSlots.isEmpty) return;
+    try {
+      for (final slot in _selectedSlots) {
+        await ref.read(savedMedicineControllerProvider.notifier).add(
+              medicineName: _selectedMedicine!.name,
+              company: _selectedMedicine!.company,
+              description: _selectedMedicine!.description,
+              imageUrl: _selectedMedicine!.imageUrl,
+              slot: slot,
+              doseCount: _doseCount,
+              frequencyType: _frequencyType.name,
+              daysOfWeek: _frequencyType == _FrequencyType.weekly
+                  ? (_selectedDays.toList()..sort())
+                  : null,
+              intervalDays: _frequencyType == _FrequencyType.interval
+                  ? _intervalDays
+                  : null,
+            );
+      }
+      if (mounted) Navigator.pop(context);
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('저장 실패: $e')),
+      );
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    final canAdd = _selectedMedicine != null && _selectedSlot != null;
+    final canAdd = _selectedMedicine != null && _selectedSlots.isNotEmpty;
 
     return Padding(
       padding: EdgeInsets.only(
@@ -185,12 +206,76 @@ class _AddMedicineSheetState extends ConsumerState<AddMedicineSheet> {
                       children: _slots
                           .map((s) => _SlotChip(
                                 label: s.label,
-                                isSelected: _selectedSlot == s.slot,
-                                onTap: () =>
-                                    setState(() => _selectedSlot = s.slot),
+                                isSelected: _selectedSlots.contains(s.slot),
+                                onTap: () => setState(() {
+                                  if (_selectedSlots.contains(s.slot)) {
+                                    _selectedSlots.remove(s.slot);
+                                  } else {
+                                    _selectedSlots.add(s.slot);
+                                  }
+                                }),
                               ))
                           .toList(),
                     ),
+                    const SizedBox(height: AppDimensions.paddingXxl),
+                    Text(
+                      '복용 주기',
+                      style: Theme.of(context)
+                          .textTheme
+                          .titleMedium
+                          ?.copyWith(fontWeight: FontWeight.w700),
+                    ),
+                    const SizedBox(height: AppDimensions.paddingMd),
+                    Wrap(
+                      spacing: AppDimensions.paddingSm,
+                      children: [
+                        _SlotChip(
+                          label: '매일',
+                          isSelected: _frequencyType == _FrequencyType.daily,
+                          onTap: () => setState(
+                              () => _frequencyType = _FrequencyType.daily),
+                        ),
+                        _SlotChip(
+                          label: '요일 선택',
+                          isSelected: _frequencyType == _FrequencyType.weekly,
+                          onTap: () => setState(
+                              () => _frequencyType = _FrequencyType.weekly),
+                        ),
+                        _SlotChip(
+                          label: 'N일마다',
+                          isSelected:
+                              _frequencyType == _FrequencyType.interval,
+                          onTap: () => setState(
+                              () => _frequencyType = _FrequencyType.interval),
+                        ),
+                      ],
+                    ),
+                    if (_frequencyType == _FrequencyType.weekly) ...[
+                      const SizedBox(height: AppDimensions.paddingMd),
+                      _DayOfWeekPicker(
+                        selectedDays: _selectedDays,
+                        onToggle: (d) => setState(() {
+                          if (_selectedDays.contains(d)) {
+                            _selectedDays.remove(d);
+                          } else {
+                            _selectedDays.add(d);
+                          }
+                        }),
+                      ),
+                    ],
+                    if (_frequencyType == _FrequencyType.interval) ...[
+                      const SizedBox(height: AppDimensions.paddingMd),
+                      _DoseCounter(
+                        count: _intervalDays,
+                        unit: '일마다',
+                        onDecrement: () {
+                          if (_intervalDays > 2) {
+                            setState(() => _intervalDays--);
+                          }
+                        },
+                        onIncrement: () => setState(() => _intervalDays++),
+                      ),
+                    ],
                     const SizedBox(height: AppDimensions.paddingXxl),
                     Text(
                       '복용량',
@@ -440,11 +525,13 @@ class _DoseCounter extends StatelessWidget {
     required this.count,
     required this.onDecrement,
     required this.onIncrement,
+    this.unit = '알',
   });
 
   final int count;
   final VoidCallback onDecrement;
   final VoidCallback onIncrement;
+  final String unit;
 
   @override
   Widget build(BuildContext context) {
@@ -455,12 +542,11 @@ class _DoseCounter extends StatelessWidget {
       ),
       child: Row(
         children: [
-          _CounterButton(
-              icon: Icons.remove_rounded, onTap: onDecrement),
+          _CounterButton(icon: Icons.remove_rounded, onTap: onDecrement),
           Expanded(
             child: Center(
               child: Text(
-                '$count알',
+                '$count$unit',
                 style: const TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.w700,
@@ -471,6 +557,51 @@ class _DoseCounter extends StatelessWidget {
           _CounterButton(icon: Icons.add_rounded, onTap: onIncrement),
         ],
       ),
+    );
+  }
+}
+
+class _DayOfWeekPicker extends StatelessWidget {
+  const _DayOfWeekPicker({
+    required this.selectedDays,
+    required this.onToggle,
+  });
+
+  final Set<int> selectedDays;
+  final ValueChanged<int> onToggle;
+
+  static const _labels = ['월', '화', '수', '목', '금', '토', '일'];
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: List.generate(7, (i) {
+        final selected = selectedDays.contains(i);
+        return GestureDetector(
+          onTap: () => onToggle(i),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 150),
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: selected
+                  ? AppColors.progressTeal
+                  : AppColors.background,
+              shape: BoxShape.circle,
+            ),
+            alignment: Alignment.center,
+            child: Text(
+              _labels[i],
+              style: TextStyle(
+                color: selected ? Colors.white : AppColors.textSecondary,
+                fontWeight: FontWeight.w700,
+                fontSize: 14,
+              ),
+            ),
+          ),
+        );
+      }),
     );
   }
 }

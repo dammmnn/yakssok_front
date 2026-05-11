@@ -134,43 +134,18 @@ class _MedicineList extends StatelessWidget {
         if (list.isEmpty) {
           return const _EmptyBox(message: '오늘 등록된 약이 없어요');
         }
-        // 화면에 강조해서 보여줄 카드: morning + lunch + missed.
-        // 나머지는 "전체 일정"에서 보도록 일단 숨김.
         final sorted = [...list]
           ..sort((a, b) => a.scheduledAt.compareTo(b.scheduledAt));
 
-        final highlight = <Schedule>[];
-        Schedule? firstWith(ScheduleSlot slot) {
-          for (final s in sorted) {
-            if (s.slot == slot && s.status != ScheduleStatus.missed) return s;
-          }
-          return null;
-        }
-
-        Schedule? firstMissed() {
-          for (final s in sorted) {
-            if (s.status == ScheduleStatus.missed) return s;
-          }
-          return null;
-        }
-
-        final morning = firstWith(ScheduleSlot.morning);
-        final lunch = firstWith(ScheduleSlot.lunch);
-        final missed = firstMissed();
-
-        if (morning != null) highlight.add(morning);
-        if (lunch != null) highlight.add(lunch);
-        if (missed != null) highlight.add(missed);
-
         return Column(
           children: [
-            for (var i = 0; i < highlight.length; i++) ...[
+            for (var i = 0; i < sorted.length; i++) ...[
               if (i > 0) const SizedBox(height: AppDimensions.paddingLg),
               MedicineCard(
-                schedule: highlight[i],
-                onActionPressed: highlight[i].status == ScheduleStatus.taken
+                schedule: sorted[i],
+                onActionPressed: sorted[i].status == ScheduleStatus.taken
                     ? null
-                    : () => onMarkTaken(highlight[i].id),
+                    : () => onMarkTaken(sorted[i].id),
               ),
             ],
           ],

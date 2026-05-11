@@ -79,6 +79,9 @@ class SavedMedicineController extends _$SavedMedicineController {
     String? imageUrl,
     required ScheduleSlot slot,
     required int doseCount,
+    String frequencyType = 'daily',
+    List<int>? daysOfWeek,
+    int? intervalDays,
   }) async {
     final userId = _db.auth.currentUser?.id;
     if (userId == null) return;
@@ -116,6 +119,9 @@ class SavedMedicineController extends _$SavedMedicineController {
       if (imageUrl != null) 'image_url': imageUrl,
       'slot': slot.name,
       'dose_count': doseCount,
+      'frequency_type': frequencyType,
+      if (daysOfWeek != null) 'days_of_week': daysOfWeek.join(','),
+      if (intervalDays != null) 'interval_days': intervalDays,
     });
 
     ref.invalidateSelf();
