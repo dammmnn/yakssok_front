@@ -47,6 +47,9 @@ dependencies:
   camera: ^0.10.5+9
   speech_to_text: ^6.6.2
 
+  # 건강 데이터 (Apple Health / Google Health Connect)
+  health: ^12.2.0
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

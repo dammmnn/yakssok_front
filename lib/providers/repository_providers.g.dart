@@ -53,7 +53,7 @@ final scheduleRepositoryProvider = Provider<ScheduleRepository>.internal(
 );
 
 typedef ScheduleRepositoryRef = ProviderRef<ScheduleRepository>;
-String _$healthRepositoryHash() => r'00e394a981b8745b9664d068131c0d4e98240a42';
+String _$healthRepositoryHash() => r'f372d10b4c18d60574eceafd428b3f16f3b70394';
 
 /// See also [healthRepository].
 @ProviderFor(healthRepository)

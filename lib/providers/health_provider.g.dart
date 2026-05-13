@@ -7,7 +7,7 @@ part of 'health_provider.dart';
 // **************************************************************************
 
 String _$todayHealthSummaryHash() =>
-    r'3bf85dffaec1379c7b64d75e532bb3a162a9a47a';
+    r'e28a66d9b386773549c5412fec3a0430e5264cab';
 
 /// See also [todayHealthSummary].
 @ProviderFor(todayHealthSummary)

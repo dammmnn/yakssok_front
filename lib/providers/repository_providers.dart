@@ -2,7 +2,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../repositories/auth_repository.dart';
 import '../repositories/health_repository.dart';
-import '../repositories/impl/local_health_repository.dart';
+import '../repositories/impl/native_health_repository.dart';
 import '../repositories/impl/supabase_auth_repository.dart';
 import '../repositories/impl/supabase_interaction_repository.dart';
 import '../repositories/impl/supabase_medicine_repository.dart';
@@ -28,7 +28,7 @@ ScheduleRepository scheduleRepository(ScheduleRepositoryRef ref) =>
 
 @Riverpod(keepAlive: true)
 HealthRepository healthRepository(HealthRepositoryRef ref) =>
-    LocalHealthRepository();
+    NativeHealthRepository();
 
 @Riverpod(keepAlive: true)
 InteractionRepository interactionRepository(InteractionRepositoryRef ref) =>

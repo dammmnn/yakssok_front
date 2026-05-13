@@ -9,12 +9,13 @@ import '../auth/login_screen.dart';
 import '../my_info/my_info_screen.dart';
 import '../pharmacy/pharmacy_screen.dart';
 import '../saved_medicine/saved_medicine_screen.dart';
+import 'health_info_screen.dart';
 import 'widgets/more_menu_item.dart';
 
 class MoreScreen extends StatelessWidget {
   const MoreScreen({super.key});
 
-  static const _logoPath = 'assets/yakssok_wordmark.png';
+  static const _logoPath = 'assets/yakssok_logo_final.png';
 
   @override
   Widget build(BuildContext context) {
@@ -33,9 +34,9 @@ class MoreScreen extends StatelessWidget {
             centerTitle: true,
             title: Image.asset(
               _logoPath,
-              width: 128,
-              height: 32,
-              fit: BoxFit.contain,
+              width: 220,
+              height: 44,
+              fit: BoxFit.cover,
               semanticLabel: AppStrings.appName,
             ),
             toolbarHeight: 64,
@@ -110,11 +111,15 @@ class _MenuCard extends StatelessWidget {
                 MaterialPageRoute(builder: (_) => const PharmacyScreen()),
               ),
             ),
-            const MoreMenuItem(
+            MoreMenuItem(
               icon: Icons.favorite_rounded,
               iconColor: AppColors.lunchPrimary,
               iconBackgroundColor: AppColors.lunchBg,
               label: AppStrings.moreHealthInfo,
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const HealthInfoScreen()),
+              ),
             ),
             MoreMenuItem(
               icon: Icons.person_rounded,

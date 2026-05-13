@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme.dart';
 import '../../models/schedule.dart';
 import '../../providers/health_provider.dart';
+import '../../providers/hydration_provider.dart';
 import '../../providers/schedule_provider.dart';
 import '../../widgets/loading_indicator.dart';
 import 'widgets/health_summary_card.dart';
@@ -35,7 +36,7 @@ class HomeScreen extends ConsumerWidget {
             scrolledUnderElevation: 0,
             surfaceTintColor: Colors.transparent,
             title: HomeHeader(),
-            titleSpacing: AppDimensions.paddingXl,
+            titleSpacing: 0,
             toolbarHeight: 64,
           ),
           SliverPadding(
@@ -165,7 +166,11 @@ class _HealthSection extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final value = ref.watch(todayHealthSummaryProvider);
     return value.when(
-      data: (s) => HealthSummaryCard(summary: s),
+      data: (s) => HealthSummaryCard(
+        summary: s,
+        onAddWater: () =>
+            ref.read(hydrationControllerProvider.notifier).add(250),
+      ),
       loading: () => const SizedBox(height: 100, child: LoadingIndicator()),
       error: (e, _) => const _ErrorBox(message: '건강 요약을 불러오지 못했어요'),
     );

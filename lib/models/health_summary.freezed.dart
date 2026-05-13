@@ -22,6 +22,8 @@ HealthSummary _$HealthSummaryFromJson(Map<String, dynamic> json) {
 mixin _$HealthSummary {
   double get hydrationLiters => throw _privateConstructorUsedError;
   int get steps => throw _privateConstructorUsedError;
+  int? get calories => throw _privateConstructorUsedError;
+  int? get waterGoalMl => throw _privateConstructorUsedError;
 
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
   @JsonKey(ignore: true)
@@ -35,7 +37,8 @@ abstract class $HealthSummaryCopyWith<$Res> {
           HealthSummary value, $Res Function(HealthSummary) then) =
       _$HealthSummaryCopyWithImpl<$Res, HealthSummary>;
   @useResult
-  $Res call({double hydrationLiters, int steps});
+  $Res call(
+      {double hydrationLiters, int steps, int? calories, int? waterGoalMl});
 }
 
 /// @nodoc
@@ -53,6 +56,8 @@ class _$HealthSummaryCopyWithImpl<$Res, $Val extends HealthSummary>
   $Res call({
     Object? hydrationLiters = null,
     Object? steps = null,
+    Object? calories = freezed,
+    Object? waterGoalMl = freezed,
   }) {
     return _then(_value.copyWith(
       hydrationLiters: null == hydrationLiters
@@ -63,6 +68,14 @@ class _$HealthSummaryCopyWithImpl<$Res, $Val extends HealthSummary>
           ? _value.steps
           : steps // ignore: cast_nullable_to_non_nullable
               as int,
+      calories: freezed == calories
+          ? _value.calories
+          : calories // ignore: cast_nullable_to_non_nullable
+              as int?,
+      waterGoalMl: freezed == waterGoalMl
+          ? _value.waterGoalMl
+          : waterGoalMl // ignore: cast_nullable_to_non_nullable
+              as int?,
     ) as $Val);
   }
 }
@@ -75,7 +88,8 @@ abstract class _$$HealthSummaryImplCopyWith<$Res>
       __$$HealthSummaryImplCopyWithImpl<$Res>;
   @override
   @useResult
-  $Res call({double hydrationLiters, int steps});
+  $Res call(
+      {double hydrationLiters, int steps, int? calories, int? waterGoalMl});
 }
 
 /// @nodoc
@@ -91,6 +105,8 @@ class __$$HealthSummaryImplCopyWithImpl<$Res>
   $Res call({
     Object? hydrationLiters = null,
     Object? steps = null,
+    Object? calories = freezed,
+    Object? waterGoalMl = freezed,
   }) {
     return _then(_$HealthSummaryImpl(
       hydrationLiters: null == hydrationLiters
@@ -101,6 +117,14 @@ class __$$HealthSummaryImplCopyWithImpl<$Res>
           ? _value.steps
           : steps // ignore: cast_nullable_to_non_nullable
               as int,
+      calories: freezed == calories
+          ? _value.calories
+          : calories // ignore: cast_nullable_to_non_nullable
+              as int?,
+      waterGoalMl: freezed == waterGoalMl
+          ? _value.waterGoalMl
+          : waterGoalMl // ignore: cast_nullable_to_non_nullable
+              as int?,
     ));
   }
 }
@@ -109,7 +133,10 @@ class __$$HealthSummaryImplCopyWithImpl<$Res>
 @JsonSerializable()
 class _$HealthSummaryImpl implements _HealthSummary {
   const _$HealthSummaryImpl(
-      {required this.hydrationLiters, required this.steps});
+      {required this.hydrationLiters,
+      required this.steps,
+      this.calories,
+      this.waterGoalMl});
 
   factory _$HealthSummaryImpl.fromJson(Map<String, dynamic> json) =>
       _$$HealthSummaryImplFromJson(json);
@@ -118,10 +145,14 @@ class _$HealthSummaryImpl implements _HealthSummary {
   final double hydrationLiters;
   @override
   final int steps;
+  @override
+  final int? calories;
+  @override
+  final int? waterGoalMl;
 
   @override
   String toString() {
-    return 'HealthSummary(hydrationLiters: $hydrationLiters, steps: $steps)';
+    return 'HealthSummary(hydrationLiters: $hydrationLiters, steps: $steps, calories: $calories, waterGoalMl: $waterGoalMl)';
   }
 
   @override
@@ -131,12 +162,17 @@ class _$HealthSummaryImpl implements _HealthSummary {
             other is _$HealthSummaryImpl &&
             (identical(other.hydrationLiters, hydrationLiters) ||
                 other.hydrationLiters == hydrationLiters) &&
-            (identical(other.steps, steps) || other.steps == steps));
+            (identical(other.steps, steps) || other.steps == steps) &&
+            (identical(other.calories, calories) ||
+                other.calories == calories) &&
+            (identical(other.waterGoalMl, waterGoalMl) ||
+                other.waterGoalMl == waterGoalMl));
   }
 
   @JsonKey(ignore: true)
   @override
-  int get hashCode => Object.hash(runtimeType, hydrationLiters, steps);
+  int get hashCode =>
+      Object.hash(runtimeType, hydrationLiters, steps, calories, waterGoalMl);
 
   @JsonKey(ignore: true)
   @override
@@ -155,7 +191,9 @@ class _$HealthSummaryImpl implements _HealthSummary {
 abstract class _HealthSummary implements HealthSummary {
   const factory _HealthSummary(
       {required final double hydrationLiters,
-      required final int steps}) = _$HealthSummaryImpl;
+      required final int steps,
+      final int? calories,
+      final int? waterGoalMl}) = _$HealthSummaryImpl;
 
   factory _HealthSummary.fromJson(Map<String, dynamic> json) =
       _$HealthSummaryImpl.fromJson;
@@ -164,6 +202,10 @@ abstract class _HealthSummary implements HealthSummary {
   double get hydrationLiters;
   @override
   int get steps;
+  @override
+  int? get calories;
+  @override
+  int? get waterGoalMl;
   @override
   @JsonKey(ignore: true)
   _$$HealthSummaryImplCopyWith<_$HealthSummaryImpl> get copyWith =>

@@ -47,6 +47,8 @@ class AppColors {
   static const Color hydrationIcon = Color(0xFFD97706);
   static const Color stepsBg = Color(0xFFDBEAFE);
   static const Color stepsIcon = Color(0xFF2563EB);
+  static const Color caloriesBg = Color(0xFFFFEDD5);
+  static const Color caloriesIcon = Color(0xFFEA580C);
 
   // 달력 슬롯 색상
   static const Color calendarAmber = Color(0xFFF59E0B);
@@ -119,6 +121,20 @@ class AppStrings {
   static const String todayHealthSummary = '오늘의 건강 요약';
   static const String hydration = '수분';
   static const String steps = '걸음';
+  static const String calories = '칼로리';
+
+  // 건강 정보 입력 화면
+  static const String healthInfoTitle = '내 건강정보';
+  static const String healthInfoBodySection = '신체 정보';
+  static const String healthInfoHeight = '키';
+  static const String healthInfoWeight = '몸무게';
+  static const String healthInfoAge = '나이';
+  static const String healthInfoGender = '성별';
+  static const String healthInfoMale = '남성';
+  static const String healthInfoFemale = '여성';
+  static const String healthInfoWaterSection = '수분 목표';
+  static const String healthInfoWaterGoal = '하루 목표';
+  static const String healthInfoSave = '저장하기';
 
   // 검색
   static const String searchTitle = '약 찾기';
