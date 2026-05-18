@@ -1,8 +1,10 @@
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../core/theme.dart';
+import '../../providers/guardian_provider.dart';
 import '../../providers/profile_provider.dart';
 import '../auth/login_screen.dart';
 
@@ -12,7 +14,9 @@ class MyInfoScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final profileAsync = ref.watch(profileControllerProvider);
-    final email = Supabase.instance.client.auth.currentUser?.email ?? '';
+    final email = Firebase.apps.isEmpty
+        ? ''
+        : FirebaseAuth.instance.currentUser?.email ?? '';
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -28,31 +32,91 @@ class MyInfoScreen extends ConsumerWidget {
       body: profileAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (_, __) => const Center(child: Text('불러오기 실패')),
-        data: (profile) => ListView(
-          padding: const EdgeInsets.all(AppDimensions.paddingXxl),
-          children: [
-            const SizedBox(height: AppDimensions.paddingXl),
-            _AvatarSection(avatarUrl: profile?.avatarUrl),
-            const SizedBox(height: AppDimensions.paddingXxl),
-            _InfoCard(
-              profile: profile,
-              email: email,
-              onEdit: () => _showEditDialog(context, ref, profile?.nickname, profile?.name),
-            ),
-            const SizedBox(height: AppDimensions.paddingXxl),
-            _LogoutButton(onLogout: () => _logout(context)),
-          ],
-        ),
+        data: (profile) {
+          final guardianNumber =
+              ref.watch(guardianControllerProvider).valueOrNull;
+          return ListView(
+            padding: const EdgeInsets.all(AppDimensions.paddingXxl),
+            children: [
+              const SizedBox(height: AppDimensions.paddingXl),
+              _AvatarSection(avatarUrl: profile?.avatarUrl),
+              const SizedBox(height: AppDimensions.paddingXxl),
+              _InfoCard(
+                profile: profile,
+                email: email,
+                onEdit: () => _showEditDialog(
+                    context, ref, profile?.nickname, profile?.name),
+              ),
+              const SizedBox(height: AppDimensions.paddingXxl),
+              _GuardianCard(
+                number: guardianNumber,
+                onEdit: () => _showGuardianDialog(context, ref, guardianNumber),
+              ),
+              const SizedBox(height: AppDimensions.paddingXxl),
+              _LogoutButton(onLogout: () => _logout(context)),
+            ],
+          );
+        },
       ),
     );
   }
 
   Future<void> _logout(BuildContext context) async {
-    await Supabase.instance.client.auth.signOut();
+    if (Firebase.apps.isNotEmpty) {
+      await FirebaseAuth.instance.signOut();
+    }
     if (!context.mounted) return;
     Navigator.of(context).pushAndRemoveUntil(
       MaterialPageRoute(builder: (_) => const LoginScreen()),
       (route) => false,
+    );
+  }
+
+  void _showGuardianDialog(
+    BuildContext context,
+    WidgetRef ref,
+    String? current,
+  ) {
+    final controller = TextEditingController(text: current ?? '');
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('보호자 전화번호',
+            style: TextStyle(fontWeight: FontWeight.w800)),
+        content: TextField(
+          controller: controller,
+          keyboardType: TextInputType.phone,
+          decoration: const InputDecoration(
+            hintText: '010-0000-0000',
+            prefixIcon: Icon(Icons.phone_rounded),
+          ),
+        ),
+        actions: [
+          if (current != null)
+            TextButton(
+              onPressed: () async {
+                await ref.read(guardianControllerProvider.notifier).clear();
+                if (ctx.mounted) Navigator.pop(ctx);
+              },
+              child: const Text('삭제',
+                  style: TextStyle(color: AppColors.alertPrimary)),
+            ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('취소',
+                style: TextStyle(color: AppColors.textSecondary)),
+          ),
+          TextButton(
+            onPressed: () async {
+              final number = controller.text.trim();
+              if (number.isEmpty) return;
+              await ref.read(guardianControllerProvider.notifier).save(number);
+              if (ctx.mounted) Navigator.pop(ctx);
+            },
+            child: const Text('저장'),
+          ),
+        ],
+      ),
     );
   }
 
@@ -166,19 +230,26 @@ class _InfoCard extends StatelessWidget {
       child: Column(
         children: [
           _InfoRow(label: '닉네임', value: profile?.nickname ?? '-'),
-          const Divider(height: 1, color: AppColors.divider,
+          const Divider(
+              height: 1,
+              color: AppColors.divider,
               indent: AppDimensions.paddingXl),
           _InfoRow(label: '이름', value: profile?.name ?? '-'),
-          const Divider(height: 1, color: AppColors.divider,
+          const Divider(
+              height: 1,
+              color: AppColors.divider,
               indent: AppDimensions.paddingXl),
           _InfoRow(label: '이메일', value: email),
-          const Divider(height: 1, color: AppColors.divider,
+          const Divider(
+              height: 1,
+              color: AppColors.divider,
               indent: AppDimensions.paddingXl),
           ListTile(
-            contentPadding: const EdgeInsets.symmetric(
-                horizontal: AppDimensions.paddingXl),
+            contentPadding:
+                const EdgeInsets.symmetric(horizontal: AppDimensions.paddingXl),
             title: const Text('정보 수정',
-                style: TextStyle(color: AppColors.progressTeal,
+                style: TextStyle(
+                    color: AppColors.progressTeal,
                     fontWeight: FontWeight.w700)),
             trailing: const Icon(Icons.edit_rounded,
                 color: AppColors.progressTeal, size: 20),
@@ -215,6 +286,79 @@ class _InfoRow extends StatelessWidget {
           Expanded(
             child: Text(value,
                 style: const TextStyle(fontWeight: FontWeight.w600)),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _GuardianCard extends StatelessWidget {
+  const _GuardianCard({required this.number, required this.onEdit});
+
+  final String? number;
+  final VoidCallback onEdit;
+
+  @override
+  Widget build(BuildContext context) {
+    final isSet = number != null && number!.isNotEmpty;
+    return Container(
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(AppDimensions.radiusXl),
+      ),
+      child: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppDimensions.paddingXl,
+              vertical: AppDimensions.paddingLg,
+            ),
+            child: Row(
+              children: [
+                Container(
+                  width: 44,
+                  height: 44,
+                  decoration: BoxDecoration(
+                    color: isSet ? AppColors.alertBg : AppColors.background,
+                    borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
+                  ),
+                  child: Icon(
+                    Icons.emergency_rounded,
+                    color: isSet ? AppColors.alertPrimary : AppColors.textMuted,
+                    size: AppDimensions.iconLg,
+                  ),
+                ),
+                const SizedBox(width: AppDimensions.paddingLg),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text('보호자 전화번호',
+                          style: TextStyle(
+                              fontWeight: FontWeight.w700,
+                              color: AppColors.textPrimary)),
+                      const SizedBox(height: 2),
+                      Text(
+                        isSet ? number! : '미설정',
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: isSet
+                              ? AppColors.alertPrimary
+                              : AppColors.textMuted,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.edit_rounded,
+                      color: AppColors.progressTeal, size: 20),
+                  onPressed: onEdit,
+                ),
+              ],
+            ),
           ),
         ],
       ),

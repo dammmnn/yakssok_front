@@ -1,8 +1,10 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:uuid/uuid.dart';
 
+import '../models/medicine.dart';
 import '../models/schedule.dart';
+import 'repository_providers.dart';
 import 'schedule_provider.dart';
 
 part 'saved_medicine_provider.g.dart';
@@ -43,8 +45,8 @@ class SavedMedicine {
         description: row['description'] as String?,
         imageUrl: row['image_url'] as String?,
         slot: _slotFromString(row['slot'] as String),
-        doseCount: row['dose_count'] as int,
-        createdAt: DateTime.parse(row['created_at'] as String),
+        doseCount: (row['dose_count'] as num).toInt(),
+        createdAt: row['created_at'] as DateTime,
       );
 
   String get slotLabel => switch (slot) {
@@ -58,18 +60,14 @@ class SavedMedicine {
 
 @riverpod
 class SavedMedicineController extends _$SavedMedicineController {
-  SupabaseClient get _db => Supabase.instance.client;
+  static final List<SavedMedicine> _savedMedicines = [];
 
   @override
   Future<List<SavedMedicine>> build() async {
-    final userId = _db.auth.currentUser?.id;
+    final userId = FirebaseAuth.instance.currentUser?.uid;
     if (userId == null) return [];
-    final rows = await _db
-        .from('user_medicines')
-        .select()
-        .eq('user_id', userId)
-        .order('created_at', ascending: false);
-    return rows.map((r) => SavedMedicine.fromRow(r)).toList();
+    return List.unmodifiable(
+        _savedMedicines..sort((a, b) => b.createdAt.compareTo(a.createdAt)));
   }
 
   Future<void> add({
@@ -83,46 +81,37 @@ class SavedMedicineController extends _$SavedMedicineController {
     List<int>? daysOfWeek,
     int? intervalDays,
   }) async {
-    final userId = _db.auth.currentUser?.id;
+    final userId = FirebaseAuth.instance.currentUser?.uid;
     if (userId == null) return;
 
     const uuid = Uuid();
     final medicineId = uuid.v4();
     final scheduledAt = _scheduledAt(slot);
 
-    // medicines 테이블에 약 등록
-    await _db.from('medicines').upsert({
-      'id': medicineId,
-      'user_id': userId,
-      'name': medicineName,
-      if (company != null) 'company': company,
-      if (description != null) 'description': description,
-      if (imageUrl != null) 'image_url': imageUrl,
-    });
+    _savedMedicines.add(SavedMedicine(
+      id: medicineId,
+      medicineName: medicineName,
+      company: company,
+      description: description,
+      imageUrl: imageUrl,
+      slot: slot,
+      doseCount: doseCount,
+      createdAt: DateTime.now(),
+    ));
 
-    // schedules 테이블에 오늘 일정 추가 → 홈 화면에 표시
-    await _db.from('schedules').insert({
-      'user_id': userId,
-      'medicine_id': medicineId,
-      'scheduled_at': scheduledAt.toIso8601String(),
-      'slot': slot.name,
-      'status': 'pending',
-      'dose_count': doseCount,
-    });
-
-    // user_medicines 테이블에 저장 → 내가 저장한 약 화면에 표시
-    await _db.from('user_medicines').insert({
-      'user_id': userId,
-      'medicine_name': medicineName,
-      if (company != null) 'company': company,
-      if (description != null) 'description': description,
-      if (imageUrl != null) 'image_url': imageUrl,
-      'slot': slot.name,
-      'dose_count': doseCount,
-      'frequency_type': frequencyType,
-      if (daysOfWeek != null) 'days_of_week': daysOfWeek.join(','),
-      if (intervalDays != null) 'interval_days': intervalDays,
-    });
+    await ref.read(scheduleRepositoryProvider).add(Schedule(
+          id: uuid.v4(),
+          medicine: Medicine(
+            id: medicineId,
+            name: medicineName,
+            company: company,
+            description: description,
+            imageUrl: imageUrl,
+          ),
+          scheduledAt: scheduledAt,
+          slot: slot,
+          doseCount: doseCount,
+        ));
 
     ref.invalidateSelf();
     ref.invalidate(todaySchedulesProvider);
@@ -131,17 +120,19 @@ class SavedMedicineController extends _$SavedMedicineController {
   DateTime _scheduledAt(ScheduleSlot slot) {
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
-    return switch (slot) {
+    final slotTime = switch (slot) {
       ScheduleSlot.morning => today.add(const Duration(hours: 8)),
-      ScheduleSlot.lunch   => today.add(const Duration(hours: 12)),
+      ScheduleSlot.lunch => today.add(const Duration(hours: 12)),
       ScheduleSlot.evening => today.add(const Duration(hours: 18)),
       ScheduleSlot.bedtime => today.add(const Duration(hours: 21)),
-      ScheduleSlot.custom  => today.add(const Duration(hours: 9)),
+      ScheduleSlot.custom => today.add(const Duration(hours: 9)),
     };
+    // 슬롯 시간이 이미 지났으면 현재 시간으로 — 과거 시간 저장 시 DB에서 복용완료 처리되는 문제 방지
+    return slotTime.isBefore(now) ? now : slotTime;
   }
 
   Future<void> remove(String id) async {
-    await _db.from('user_medicines').delete().eq('id', id);
+    _savedMedicines.removeWhere((medicine) => medicine.id == id);
     ref.invalidateSelf();
   }
 }

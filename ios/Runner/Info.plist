@@ -28,6 +28,8 @@
 	<true/>
 	<key>NMFClientId</key>
 	<string>j6tn20kmdo</string>
+	<key>NSUserNotificationsUsageDescription</key>
+	<string>복약 시간 알림을 보내기 위해 알림 권한이 필요합니다.</string>
 	<key>NSCameraUsageDescription</key>
 	<string>약 정보를 촬영하기 위해 카메라 접근이 필요합니다.</string>
 	<key>NSHealthShareUsageDescription</key>

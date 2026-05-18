@@ -25,7 +25,7 @@ class CalendarScreen extends ConsumerWidget {
             scrolledUnderElevation: 0,
             surfaceTintColor: Colors.transparent,
             title: _CalendarAppBar(),
-            titleSpacing: AppDimensions.paddingXl,
+            titleSpacing: 0,
             toolbarHeight: 64,
           ),
           SliverPadding(
@@ -59,22 +59,26 @@ class CalendarScreen extends ConsumerWidget {
 class _CalendarAppBar extends StatelessWidget {
   const _CalendarAppBar();
 
-  static const _logoPath = 'assets/yakssok_wordmark.png';
+  static const _logoPath = 'assets/yakssok_logo_final.png';
 
   @override
   Widget build(BuildContext context) {
     return Row(
       children: [
-        Image.asset(
-          _logoPath,
-          width: 128,
-          height: 32,
-          fit: BoxFit.contain,
-          alignment: Alignment.centerLeft,
-          semanticLabel: AppStrings.appName,
+        Transform.translate(
+          offset: const Offset(-18, 0),
+          child: Image.asset(
+            _logoPath,
+            width: 220,
+            height: 44,
+            fit: BoxFit.cover,
+            alignment: Alignment.center,
+            semanticLabel: AppStrings.appName,
+          ),
         ),
         const Spacer(),
         const EmergencyButton(),
+        const SizedBox(width: AppDimensions.paddingMd),
       ],
     );
   }

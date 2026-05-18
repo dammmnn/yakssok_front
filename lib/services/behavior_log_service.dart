@@ -28,6 +28,8 @@ class BehaviorLogService extends _$BehaviorLogService {
     _checkUpgrade();
   }
 
+  void reset() => state = 0;
+
   void _checkUpgrade() {
     final current =
         ref.read(adaptiveUIControllerProvider).valueOrNull;

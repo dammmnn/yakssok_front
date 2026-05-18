@@ -1,5 +1,6 @@
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../core/theme.dart';
 import 'signup_screen.dart';
@@ -13,7 +14,7 @@ class EmailLoginScreen extends StatefulWidget {
 }
 
 class _EmailLoginScreenState extends State<EmailLoginScreen> {
-  static const _logoPath = 'assets/yakssok_logo.png';
+  static const _logoPath = 'assets/yakssok_logo_final.png';
 
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
@@ -28,36 +29,66 @@ class _EmailLoginScreenState extends State<EmailLoginScreen> {
   }
 
   Future<void> _login() async {
+    if (Firebase.apps.isEmpty) {
+      setState(() {
+        _errorMessage = 'Firebase 설정 파일을 추가한 뒤 다시 실행해주세요.';
+      });
+      return;
+    }
+
     setState(() {
       _errorMessage = null;
       _isLoading = true;
     });
 
     try {
-      await Supabase.instance.client.auth.signInWithPassword(
+      await FirebaseAuth.instance.signInWithEmailAndPassword(
         email: _emailController.text.trim(),
         password: _passwordController.text,
       );
       if (!mounted) return;
       Navigator.of(context).popUntil((route) => route.isFirst);
+    } on FirebaseAuthException catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _isLoading = false;
+        _errorMessage = _authErrorMessage(e);
+      });
     } catch (e) {
       if (!mounted) return;
       setState(() {
         _isLoading = false;
-        _errorMessage = AppStrings.loginFailedMessage;
+        _errorMessage = '로그인 실패: $e';
       });
     }
   }
 
+  String _authErrorMessage(FirebaseAuthException e) {
+    final detail = e.message ?? e.code;
+    return switch (e.code) {
+      'invalid-email' => '이메일 형식을 확인해주세요.',
+      'user-not-found' ||
+      'wrong-password' ||
+      'invalid-credential' =>
+        AppStrings.loginFailedMessage,
+      'operation-not-allowed' =>
+        'Firebase Console에서 Email/Password 로그인을 활성화해주세요. (${e.code})',
+      'configuration-not-found' ||
+      'internal-error' =>
+        'Firebase Authentication 설정을 확인해주세요. (${e.code}: $detail)',
+      _ => '로그인 실패: ${e.code} - $detail',
+    };
+  }
+
   @override
   Widget build(BuildContext context) {
-
     return Scaffold(
       backgroundColor: AppColors.surface,
       appBar: AppBar(
         backgroundColor: AppColors.surface,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_rounded, color: AppColors.textPrimary),
+          icon: const Icon(Icons.arrow_back_ios_rounded,
+              color: AppColors.textPrimary),
           onPressed: () => Navigator.pop(context),
         ),
       ),
@@ -129,8 +160,7 @@ class _EmailLoginScreenState extends State<EmailLoginScreen> {
                   TextButton(
                     onPressed: () => Navigator.push(
                       context,
-                      MaterialPageRoute(
-                          builder: (_) => const SignupScreen()),
+                      MaterialPageRoute(builder: (_) => const SignupScreen()),
                     ),
                     child: const Text(
                       AppStrings.signUp,

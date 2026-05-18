@@ -1,6 +1,7 @@
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'core/behavior_observer.dart';
 import 'core/theme.dart';
@@ -31,10 +32,8 @@ class _YakssokAppState extends ConsumerState<YakssokApp> {
 
   @override
   Widget build(BuildContext context) {
-    final settings = ref
-        .watch(adaptiveUIControllerProvider)
-        .valueOrNull
-        ?? const AdaptiveUISettings();
+    final settings = ref.watch(adaptiveUIControllerProvider).valueOrNull ??
+        const AdaptiveUISettings();
 
     return MaterialApp(
       title: AppStrings.appName,
@@ -57,17 +56,18 @@ class _AuthGate extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return StreamBuilder<AuthState>(
-      stream: Supabase.instance.client.auth.onAuthStateChange,
+    if (Firebase.apps.isEmpty) return const LoginScreen();
+
+    return StreamBuilder<User?>(
+      stream: FirebaseAuth.instance.authStateChanges(),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Scaffold(
             body: Center(child: CircularProgressIndicator()),
           );
         }
-        final session = snapshot.data?.session ??
-            Supabase.instance.client.auth.currentSession;
-        if (session != null) return const MainScreen();
+        final user = snapshot.data ?? FirebaseAuth.instance.currentUser;
+        if (user != null) return const MainScreen();
         return const LoginScreen();
       },
     );

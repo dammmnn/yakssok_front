@@ -7,33 +7,34 @@ import 'widgets/login_button.dart';
 class LoginScreen extends StatelessWidget {
   const LoginScreen({super.key});
 
-  static const _logoPath = 'assets/yakssok_logo.png';
+  static const _logoPath = 'assets/yakssok_logo_final.png';
 
   @override
   Widget build(BuildContext context) {
     return PopScope(
       canPop: false,
       child: Scaffold(
-      backgroundColor: AppColors.surface,
-      appBar: AppBar(
         backgroundColor: AppColors.surface,
-        automaticallyImplyLeading: false,
-      ),
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: AppDimensions.paddingXxl),
-          child: Column(
-            children: [
-              const Spacer(flex: 2),
-              const _LogoSection(logoPath: _logoPath),
-              const Spacer(flex: 3),
-              _LoginButtons(context: context),
-              const Spacer(flex: 1),
-            ],
+        appBar: AppBar(
+          backgroundColor: AppColors.surface,
+          automaticallyImplyLeading: false,
+        ),
+        body: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(
+                horizontal: AppDimensions.paddingXxl),
+            child: Column(
+              children: [
+                const Spacer(flex: 2),
+                const _LogoSection(logoPath: _logoPath),
+                const Spacer(flex: 3),
+                _LoginButtons(context: context),
+                const Spacer(flex: 1),
+              ],
+            ),
           ),
         ),
       ),
-    ),
     );
   }
 }

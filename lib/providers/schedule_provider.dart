@@ -1,6 +1,7 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../models/schedule.dart';
+import '../services/notification_service.dart';
 import 'repository_providers.dart';
 
 part 'schedule_provider.g.dart';
@@ -11,12 +12,15 @@ class TodaySchedules extends _$TodaySchedules {
   @override
   Future<List<Schedule>> build() async {
     final repo = ref.watch(scheduleRepositoryProvider);
-    return repo.getSchedulesByDate(DateTime.now());
+    final schedules = await repo.getSchedulesByDate(DateTime.now());
+    await NotificationService.scheduleForAll(schedules);
+    return schedules;
   }
 
   Future<void> markTaken(String id) async {
     final repo = ref.read(scheduleRepositoryProvider);
     await repo.markTaken(id);
+    await NotificationService.cancel(id);
     ref.invalidateSelf();
   }
 }

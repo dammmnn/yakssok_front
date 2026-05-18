@@ -11,7 +11,7 @@ Future<List<Medicine>> myMedicines(MyMedicinesRef ref) {
   return ref.watch(medicineRepositoryProvider).getMyMedicines();
 }
 
-/// 약 검색.
+/// 약 검색 (drug_interactions 테이블 기반).
 @riverpod
 class MedicineSearch extends _$MedicineSearch {
   @override

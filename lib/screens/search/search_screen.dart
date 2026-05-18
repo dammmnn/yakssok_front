@@ -1,7 +1,12 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/theme.dart';
 import '../../models/medicine.dart';
+import '../../providers/medicine_provider.dart';
+import '../../providers/recent_medicine_search_provider.dart';
 import '../../widgets/emergency_button.dart';
 import '../medicine_detail/medicine_detail_screen.dart';
 import 'camera_screen.dart';
@@ -27,7 +32,7 @@ class SearchScreen extends StatelessWidget {
             scrolledUnderElevation: 0,
             surfaceTintColor: Colors.transparent,
             title: _SearchHeader(),
-            titleSpacing: AppDimensions.paddingXxl,
+            titleSpacing: 0,
             toolbarHeight: 64,
           ),
           SliverPadding(
@@ -42,6 +47,8 @@ class SearchScreen extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   _SearchTitle(),
+                  SizedBox(height: AppDimensions.paddingXl),
+                  _TextSearchSection(),
                   SizedBox(height: AppDimensions.paddingXxl),
                   _SearchMethodGrid(),
                   SizedBox(height: AppDimensions.paddingXxl),
@@ -56,25 +63,240 @@ class SearchScreen extends StatelessWidget {
   }
 }
 
+class _TextSearchSection extends ConsumerStatefulWidget {
+  const _TextSearchSection();
+
+  @override
+  ConsumerState<_TextSearchSection> createState() => _TextSearchSectionState();
+}
+
+class _TextSearchSectionState extends ConsumerState<_TextSearchSection> {
+  final _controller = TextEditingController();
+  Timer? _debounce;
+
+  @override
+  void dispose() {
+    _debounce?.cancel();
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _onQueryChanged(String value) {
+    setState(() {});
+    _debounce?.cancel();
+    _debounce = Timer(const Duration(milliseconds: 250), () {
+      ref.read(medicineSearchProvider.notifier).search(value);
+    });
+  }
+
+  Future<void> _open(Medicine medicine) {
+    return _openMedicineDetail(context, ref, medicine);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final searchState = ref.watch(medicineSearchProvider);
+    final query = _controller.text.trim();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        TextField(
+          controller: _controller,
+          onChanged: _onQueryChanged,
+          textInputAction: TextInputAction.search,
+          onSubmitted: (value) {
+            _debounce?.cancel();
+            ref.read(medicineSearchProvider.notifier).search(value);
+          },
+          decoration: InputDecoration(
+            filled: true,
+            fillColor: AppColors.surface,
+            hintText: '약 이름을 검색해보세요',
+            prefixIcon: const Icon(
+              Icons.search_rounded,
+              color: AppColors.textSecondary,
+            ),
+            suffixIcon: query.isEmpty
+                ? null
+                : IconButton(
+                    icon: const Icon(Icons.close_rounded),
+                    color: AppColors.textSecondary,
+                    onPressed: () {
+                      _debounce?.cancel();
+                      _controller.clear();
+                      ref.read(medicineSearchProvider.notifier).search('');
+                      setState(() {});
+                    },
+                  ),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(AppDimensions.radiusXl),
+              borderSide: BorderSide.none,
+            ),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: AppDimensions.paddingLg,
+              vertical: AppDimensions.paddingLg,
+            ),
+          ),
+        ),
+        if (query.isNotEmpty) ...[
+          const SizedBox(height: AppDimensions.paddingMd),
+          searchState.when(
+            data: (medicines) {
+              if (medicines.isEmpty) {
+                return const _SearchEmptyResult();
+              }
+
+              return _SearchResultList(
+                medicines: medicines,
+                onTap: _open,
+              );
+            },
+            loading: () => const _SearchLoadingResult(),
+            error: (error, _) => _SearchErrorResult(message: '$error'),
+          ),
+        ],
+      ],
+    );
+  }
+}
+
+class _SearchResultList extends StatelessWidget {
+  const _SearchResultList({
+    required this.medicines,
+    required this.onTap,
+  });
+
+  final List<Medicine> medicines;
+  final ValueChanged<Medicine> onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: AppColors.surface,
+      borderRadius: BorderRadius.circular(AppDimensions.radiusXl),
+      child: ListView.separated(
+        shrinkWrap: true,
+        physics: const NeverScrollableScrollPhysics(),
+        padding: const EdgeInsets.symmetric(vertical: AppDimensions.paddingSm),
+        itemCount: medicines.length,
+        separatorBuilder: (_, __) => const Divider(
+          height: 1,
+          color: AppColors.divider,
+        ),
+        itemBuilder: (context, index) {
+          final medicine = medicines[index];
+
+          return ListTile(
+            leading: const Icon(
+              Icons.medication_rounded,
+              color: AppColors.progressTeal,
+            ),
+            title: Text(
+              medicine.name,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(fontWeight: FontWeight.w700),
+            ),
+            subtitle: Text(
+              [
+                if (medicine.company != null) medicine.company,
+                if (medicine.dosage != null) medicine.dosage,
+              ].join(' · '),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+            trailing: const Icon(Icons.chevron_right_rounded),
+            onTap: () => onTap(medicine),
+          );
+        },
+      ),
+    );
+  }
+}
+
+class _SearchLoadingResult extends StatelessWidget {
+  const _SearchLoadingResult();
+
+  @override
+  Widget build(BuildContext context) {
+    return const Center(
+      child: Padding(
+        padding: EdgeInsets.all(AppDimensions.paddingXl),
+        child: CircularProgressIndicator(strokeWidth: 2),
+      ),
+    );
+  }
+}
+
+class _SearchEmptyResult extends StatelessWidget {
+  const _SearchEmptyResult();
+
+  @override
+  Widget build(BuildContext context) {
+    return const _SearchMessageBox(message: '검색 결과가 없어요');
+  }
+}
+
+class _SearchErrorResult extends StatelessWidget {
+  const _SearchErrorResult({required this.message});
+
+  final String message;
+
+  @override
+  Widget build(BuildContext context) {
+    return _SearchMessageBox(message: '검색 중 문제가 생겼어요: $message');
+  }
+}
+
+class _SearchMessageBox extends StatelessWidget {
+  const _SearchMessageBox({required this.message});
+
+  final String message;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(AppDimensions.paddingLg),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(AppDimensions.radiusXl),
+      ),
+      child: Text(
+        message,
+        textAlign: TextAlign.center,
+        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+              color: AppColors.textSecondary,
+              fontWeight: FontWeight.w600,
+            ),
+      ),
+    );
+  }
+}
+
 class _SearchHeader extends StatelessWidget {
   const _SearchHeader();
 
-  static const _logoPath = 'assets/yakssok_wordmark.png';
+  static const _logoPath = 'assets/yakssok_logo_final.png';
 
   @override
   Widget build(BuildContext context) {
     return Row(
       children: [
-        Image.asset(
-          _logoPath,
-          width: 128,
-          height: 32,
-          fit: BoxFit.contain,
-          alignment: Alignment.centerLeft,
-          semanticLabel: AppStrings.appName,
+        Transform.translate(
+          offset: const Offset(-18, 0),
+          child: Image.asset(
+            _logoPath,
+            width: 220,
+            height: 44,
+            fit: BoxFit.cover,
+            alignment: Alignment.center,
+            semanticLabel: AppStrings.appName,
+          ),
         ),
         const Spacer(),
         const EmergencyButton(),
+        const SizedBox(width: AppDimensions.paddingMd),
       ],
     );
   }
@@ -153,8 +375,7 @@ class _SearchMethodGrid extends StatelessWidget {
                     description: AppStrings.cameraSearchDescription,
                     onTap: () => Navigator.push(
                       context,
-                      MaterialPageRoute(
-                          builder: (_) => const CameraScreen()),
+                      MaterialPageRoute(builder: (_) => const CameraScreen()),
                     ),
                   ),
                 ),
@@ -169,8 +390,7 @@ class _SearchMethodGrid extends StatelessWidget {
                     description: AppStrings.chatSearchDescription,
                     onTap: () => Navigator.push(
                       context,
-                      MaterialPageRoute(
-                          builder: (_) => const ChatbotScreen()),
+                      MaterialPageRoute(builder: (_) => const ChatbotScreen()),
                     ),
                   ),
                 ),
@@ -274,31 +494,13 @@ class _SearchMethodCard extends StatelessWidget {
   }
 }
 
-class _RecentSearchSection extends StatelessWidget {
+class _RecentSearchSection extends ConsumerWidget {
   const _RecentSearchSection();
 
-  static const _items = [
-    _RecentSearchItem(
-      name: '타이레놀정ㅋㅋ',
-      dosage: '500mg',
-      searchedAt: '2024.05.15',
-      accentColor: AppColors.searchRecentGreen,
-      isEmphasized: true,
-    ),
-    _RecentSearchItem(
-      name: '아로나민 골드',
-      searchedAt: '2024.05.12',
-      accentColor: AppColors.searchRecentBlue,
-    ),
-    _RecentSearchItem(
-      name: '베아제 정',
-      searchedAt: '2024.05.10',
-      accentColor: AppColors.searchRecentRed,
-    ),
-  ];
-
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final recentState = ref.watch(recentMedicineSearchProvider);
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -314,7 +516,10 @@ class _RecentSearchSection extends StatelessWidget {
               ),
             ),
             TextButton(
-              onPressed: () {},
+              onPressed: recentState.valueOrNull?.isEmpty ?? true
+                  ? null
+                  : () =>
+                      ref.read(recentMedicineSearchProvider.notifier).clear(),
               style: TextButton.styleFrom(
                 foregroundColor: AppColors.searchRecentBlue,
                 padding: const EdgeInsets.symmetric(
@@ -330,38 +535,52 @@ class _RecentSearchSection extends StatelessWidget {
           ],
         ),
         const SizedBox(height: AppDimensions.paddingXl),
-        for (var i = 0; i < _items.length; i++) ...[
-          if (i > 0) const SizedBox(height: AppDimensions.paddingLg),
-          _RecentMedicineCard(item: _items[i]),
-        ],
+        recentState.when(
+          data: (items) {
+            if (items.isEmpty) {
+              return const _SearchMessageBox(message: '최근 검색한 약이 없어요');
+            }
+
+            return Column(
+              children: [
+                for (var i = 0; i < items.length; i++) ...[
+                  if (i > 0) const SizedBox(height: AppDimensions.paddingLg),
+                  _RecentMedicineCard(
+                    item: items[i],
+                    accentColor: _recentAccentColor(i),
+                  ),
+                ],
+              ],
+            );
+          },
+          loading: () => const _SearchLoadingResult(),
+          error: (error, _) => const _SearchMessageBox(
+            message: '최근 검색을 불러오지 못했어요',
+          ),
+        ),
       ],
     );
   }
 }
 
-class _RecentMedicineCard extends StatelessWidget {
-  const _RecentMedicineCard({required this.item});
+class _RecentMedicineCard extends ConsumerWidget {
+  const _RecentMedicineCard({
+    required this.item,
+    required this.accentColor,
+  });
 
-  final _RecentSearchItem item;
+  final RecentMedicineSearch item;
+  final Color accentColor;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final medicine = item.medicine;
+
     return Material(
       color: AppColors.surface,
       borderRadius: BorderRadius.circular(AppDimensions.radiusXl),
       child: InkWell(
-        onTap: () => Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (_) => MedicineDetailScreen(
-              medicine: Medicine(
-                id: item.name,
-                name: item.name,
-                dosage: item.dosage,
-              ),
-            ),
-          ),
-        ),
+        onTap: () => _openMedicineDetail(context, ref, medicine),
         borderRadius: BorderRadius.circular(AppDimensions.radiusXl),
         child: Padding(
           padding: const EdgeInsets.fromLTRB(
@@ -376,7 +595,7 @@ class _RecentMedicineCard extends StatelessWidget {
                 width: 12,
                 height: 64,
                 decoration: BoxDecoration(
-                  color: item.accentColor,
+                  color: accentColor,
                   borderRadius: BorderRadius.circular(AppDimensions.radiusPill),
                 ),
               ),
@@ -386,21 +605,19 @@ class _RecentMedicineCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      item.name,
+                      medicine.name,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                            fontSize: item.isEmphasized ? 23 : 22,
-                            fontWeight: item.isEmphasized
-                                ? FontWeight.w800
-                                : FontWeight.w400,
+                            fontSize: 22,
+                            fontWeight: FontWeight.w600,
                             height: 1.25,
                           ),
                     ),
-                    if (item.dosage != null) ...[
+                    if (medicine.dosage != null) ...[
                       const SizedBox(height: 2),
                       Text(
-                        item.dosage!,
+                        medicine.dosage!,
                         style: Theme.of(context).textTheme.titleLarge?.copyWith(
                               fontSize: 23,
                               fontWeight: FontWeight.w800,
@@ -410,7 +627,7 @@ class _RecentMedicineCard extends StatelessWidget {
                     ],
                     const SizedBox(height: AppDimensions.paddingXs),
                     Text(
-                      '${AppStrings.searchedAt}: ${item.searchedAt}',
+                      '${AppStrings.searchedAt}: ${_formatDate(item.searchedAt)}',
                       style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                             color: AppColors.textSecondary,
                             fontWeight: FontWeight.w600,
@@ -432,18 +649,36 @@ class _RecentMedicineCard extends StatelessWidget {
   }
 }
 
-class _RecentSearchItem {
-  const _RecentSearchItem({
-    required this.name,
-    required this.searchedAt,
-    required this.accentColor,
-    this.dosage,
-    this.isEmphasized = false,
-  });
+Future<void> _openMedicineDetail(
+  BuildContext context,
+  WidgetRef ref,
+  Medicine medicine,
+) async {
+  await ref.read(recentMedicineSearchProvider.notifier).add(medicine);
+  if (!context.mounted) return;
 
-  final String name;
-  final String searchedAt;
-  final Color accentColor;
-  final String? dosage;
-  final bool isEmphasized;
+  await Navigator.push(
+    context,
+    MaterialPageRoute(
+      builder: (_) => MedicineDetailScreen(medicine: medicine),
+    ),
+  );
+}
+
+Color _recentAccentColor(int index) {
+  const colors = [
+    AppColors.searchRecentGreen,
+    AppColors.searchRecentBlue,
+    AppColors.searchRecentRed,
+  ];
+
+  return colors[index % colors.length];
+}
+
+String _formatDate(DateTime dateTime) {
+  final local = dateTime.toLocal();
+  final month = local.month.toString().padLeft(2, '0');
+  final day = local.day.toString().padLeft(2, '0');
+
+  return '${local.year}.$month.$day';
 }

@@ -137,11 +137,15 @@ class _InteractionCard extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: AppDimensions.paddingSm),
-              Text(
-                '${interaction.drugAName} + ${interaction.drugBName}',
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w800,
-                    ),
+              Expanded(
+                child: Text(
+                  '${interaction.drugAName} + ${interaction.drugBName}',
+                  maxLines: 3,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w800,
+                      ),
+                ),
               ),
             ],
           ),

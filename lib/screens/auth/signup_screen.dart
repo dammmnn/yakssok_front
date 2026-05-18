@@ -1,5 +1,6 @@
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../core/theme.dart';
 import 'widgets/login_button.dart';
@@ -32,6 +33,11 @@ class _SignupScreenState extends State<SignupScreen> {
   }
 
   Future<void> _signup() async {
+    if (Firebase.apps.isEmpty) {
+      setState(() => _errorMessage = 'Firebase 설정 파일을 추가한 뒤 다시 실행해주세요.');
+      return;
+    }
+
     final email = _emailController.text.trim();
     final nickname = _nicknameController.text.trim();
     final password = _passwordController.text;
@@ -53,37 +59,22 @@ class _SignupScreenState extends State<SignupScreen> {
     });
 
     try {
-      final response = await Supabase.instance.client.auth.signUp(
+      final credential =
+          await FirebaseAuth.instance.createUserWithEmailAndPassword(
         email: email,
         password: password,
       );
 
-      final userId = response.user?.id;
-      if (userId != null) {
-        await Supabase.instance.client.from('profiles').upsert({
-          'id': userId,
-          'nickname': nickname,
-          'updated_at': DateTime.now().toIso8601String(),
-        });
-      }
+      final user = credential.user;
+      await user?.updateDisplayName(nickname);
 
       if (!mounted) return;
       Navigator.pop(context);
-    } on AuthException catch (e) {
+    } on FirebaseAuthException catch (e) {
       if (!mounted) return;
-      final msg = e.message.toLowerCase();
       setState(() {
         _isLoading = false;
-        if (msg.contains('already registered') ||
-            msg.contains('already been registered') ||
-            msg.contains('user already registered') ||
-            msg.contains('email address is already')) {
-          _errorMessage = '이미 가입된 이메일입니다.';
-        } else if (msg.contains('password') && msg.contains('6')) {
-          _errorMessage = '비밀번호는 6자리 이상이어야 합니다.';
-        } else {
-          _errorMessage = e.message;
-        }
+        _errorMessage = _authErrorMessage(e);
       });
     } catch (e) {
       if (!mounted) return;
@@ -92,6 +83,24 @@ class _SignupScreenState extends State<SignupScreen> {
         _errorMessage = e.toString();
       });
     }
+  }
+
+  String _authErrorMessage(FirebaseAuthException e) {
+    final detail = e.message ?? e.code;
+    final msg = detail.toLowerCase();
+    return switch (e.code) {
+      'email-already-in-use' => '이미 가입된 이메일입니다.',
+      'invalid-email' => '이메일 형식을 확인해주세요.',
+      'weak-password' => '비밀번호는 6자리 이상이어야 합니다.',
+      'operation-not-allowed' =>
+        'Firebase Console에서 Email/Password 로그인을 활성화해주세요. (${e.code})',
+      'configuration-not-found' ||
+      'internal-error' =>
+        'Firebase Authentication 설정을 확인해주세요. (${e.code}: $detail)',
+      _ when msg.contains('password') && msg.contains('6') =>
+        '비밀번호는 6자리 이상이어야 합니다.',
+      _ => '회원가입 실패: ${e.code} - $detail',
+    };
   }
 
   @override

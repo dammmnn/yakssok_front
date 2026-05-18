@@ -7,7 +7,7 @@ import '../../../widgets/emergency_button.dart';
 class HomeHeader extends StatelessWidget {
   const HomeHeader({super.key, this.onEmergencyPressed});
 
-  static const _logoPath = 'assets/yakssok_wordmark.png';
+  static const _logoPath = 'assets/yakssok_logo_final.png';
 
   final VoidCallback? onEmergencyPressed;
 
@@ -18,16 +18,20 @@ class HomeHeader extends StatelessWidget {
         Padding(
           padding:
               const EdgeInsets.symmetric(vertical: AppDimensions.paddingXs),
-          child: Image.asset(
-            _logoPath,
-            width: 150,
-            height: 36,
-            fit: BoxFit.contain,
-            semanticLabel: AppStrings.appName,
+          child: Transform.translate(
+            offset: const Offset(-18, 0),
+            child: Image.asset(
+              _logoPath,
+              width: 220,
+              height: 44,
+              fit: BoxFit.cover,
+              semanticLabel: AppStrings.appName,
+            ),
           ),
         ),
         const Spacer(),
         EmergencyButton(onPressed: onEmergencyPressed),
+        const SizedBox(width: AppDimensions.paddingMd),
       ],
     );
   }

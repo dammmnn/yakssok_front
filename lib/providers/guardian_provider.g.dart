@@ -1,27 +1,27 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'behavior_log_service.dart';
+part of 'guardian_provider.dart';
 
 // **************************************************************************
 // RiverpodGenerator
 // **************************************************************************
 
-String _$behaviorLogServiceHash() =>
-    r'f869a3b6155d1345e97f61462d0541e934bb599f';
+String _$guardianControllerHash() =>
+    r'6300a49117740c832149f4a279caa25a312ce643';
 
-/// See also [BehaviorLogService].
-@ProviderFor(BehaviorLogService)
-final behaviorLogServiceProvider =
-    NotifierProvider<BehaviorLogService, int>.internal(
-  BehaviorLogService.new,
-  name: r'behaviorLogServiceProvider',
+/// See also [GuardianController].
+@ProviderFor(GuardianController)
+final guardianControllerProvider =
+    AsyncNotifierProvider<GuardianController, String?>.internal(
+  GuardianController.new,
+  name: r'guardianControllerProvider',
   debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
       ? null
-      : _$behaviorLogServiceHash,
+      : _$guardianControllerHash,
   dependencies: null,
   allTransitiveDependencies: null,
 );
 
-typedef _$BehaviorLogService = Notifier<int>;
+typedef _$GuardianController = AsyncNotifier<String?>;
 // ignore_for_file: type=lint
 // ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member

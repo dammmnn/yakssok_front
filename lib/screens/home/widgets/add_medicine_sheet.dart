@@ -1,10 +1,15 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/theme.dart';
 import '../../../models/medicine.dart';
 import '../../../models/schedule.dart';
+import '../../../providers/medicine_provider.dart';
+import '../../../providers/repository_providers.dart';
 import '../../../providers/saved_medicine_provider.dart';
+import '../../warning/warning_screen.dart';
 
 class AddMedicineSheet extends ConsumerStatefulWidget {
   const AddMedicineSheet({super.key});
@@ -17,6 +22,7 @@ enum _FrequencyType { daily, weekly, interval }
 
 class _AddMedicineSheetState extends ConsumerState<AddMedicineSheet> {
   final _searchController = TextEditingController();
+  Timer? _debounce;
   Medicine? _selectedMedicine;
   final Set<ScheduleSlot> _selectedSlots = {};
   int _doseCount = 1;
@@ -24,30 +30,6 @@ class _AddMedicineSheetState extends ConsumerState<AddMedicineSheet> {
   _FrequencyType _frequencyType = _FrequencyType.daily;
   final Set<int> _selectedDays = {0, 1, 2, 3, 4, 5, 6}; // 0=월 ~ 6=일
   int _intervalDays = 2;
-
-  List<Medicine> _searchResults = [];
-
-  static const _mockMedicines = [
-    Medicine(
-      id: 'm1',
-      name: '타이레놀 (500mg)',
-      company: '(주)한국얀센',
-      dosage: '500mg',
-      description: '해열, 진통, 소염제',
-    ),
-    Medicine(
-      id: 'm2',
-      name: '아로나민 골드',
-      company: '일동제약',
-      description: '비타민 B1 주성분 복합제',
-    ),
-    Medicine(
-      id: 'm3',
-      name: '베아제 정',
-      company: '대웅제약',
-      description: '소화효소제',
-    ),
-  ];
 
   static const _slots = [
     (slot: ScheduleSlot.morning, label: '아침'),
@@ -60,26 +42,24 @@ class _AddMedicineSheetState extends ConsumerState<AddMedicineSheet> {
   @override
   void dispose() {
     _searchController.dispose();
+    _debounce?.cancel();
     super.dispose();
   }
 
   void _onSearchChanged(String query) {
-    if (query.trim().isEmpty) {
-      setState(() => _searchResults = []);
-      return;
-    }
-    setState(() {
-      _searchResults = _mockMedicines
-          .where((m) =>
-              m.name.toLowerCase().contains(query.toLowerCase()) ||
-              (m.company?.toLowerCase().contains(query.toLowerCase()) ?? false))
-          .toList();
+    _debounce?.cancel();
+    _debounce = Timer(const Duration(milliseconds: 400), () {
+      ref.read(medicineSearchProvider.notifier).search(query);
     });
   }
 
   Future<void> _onAdd() async {
     if (_selectedMedicine == null || _selectedSlots.isEmpty) return;
     try {
+      final existing =
+          await ref.read(savedMedicineControllerProvider.future);
+      final existingNames = existing.map((m) => m.medicineName).toList();
+
       for (final slot in _selectedSlots) {
         await ref.read(savedMedicineControllerProvider.notifier).add(
               medicineName: _selectedMedicine!.name,
@@ -97,7 +77,22 @@ class _AddMedicineSheetState extends ConsumerState<AddMedicineSheet> {
                   : null,
             );
       }
-      if (mounted) Navigator.pop(context);
+
+      final interactions = await ref
+          .read(interactionRepositoryProvider)
+          .checkInteractions([_selectedMedicine!.name, ...existingNames]);
+
+      if (!mounted) return;
+      Navigator.pop(context);
+
+      if (interactions.isNotEmpty) {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => WarningScreen(interactions: interactions),
+          ),
+        );
+      }
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -108,6 +103,7 @@ class _AddMedicineSheetState extends ConsumerState<AddMedicineSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final searchState = ref.watch(medicineSearchProvider);
     final canAdd = _selectedMedicine != null && _selectedSlots.isNotEmpty;
 
     return Padding(
@@ -168,29 +164,67 @@ class _AddMedicineSheetState extends ConsumerState<AddMedicineSheet> {
                       controller: _searchController,
                       onChanged: _onSearchChanged,
                     ),
-                    if (_searchResults.isNotEmpty) ...[
-                      const SizedBox(height: AppDimensions.paddingMd),
-                      ..._searchResults.map((m) => Padding(
+                    searchState.when(
+                      loading: () => const Padding(
+                        padding: EdgeInsets.symmetric(
+                            vertical: AppDimensions.paddingMd),
+                        child: Center(child: CircularProgressIndicator()),
+                      ),
+                      error: (_, __) => const SizedBox.shrink(),
+                      data: (results) {
+                        if (results.isNotEmpty) {
+                          return _SearchResultFrame(
+                            children: results
+                                .map((m) => _MedicineResultCard(
+                                      medicine: m,
+                                      isSelected:
+                                          _selectedMedicine?.id == m.id,
+                                      onTap: () => setState(() {
+                                        _selectedMedicine =
+                                            _selectedMedicine?.id == m.id
+                                                ? null
+                                                : m;
+                                      }),
+                                    ))
+                                .toList(),
+                          );
+                        }
+                        final query = _searchController.text.trim();
+                        if (query.isNotEmpty) {
+                          return Padding(
                             padding: const EdgeInsets.only(
-                                bottom: AppDimensions.paddingSm),
-                            child: _MedicineResultCard(
-                              medicine: m,
-                              isSelected: _selectedMedicine?.id == m.id,
+                                top: AppDimensions.paddingMd),
+                            child: _DirectInputCard(
+                              name: query,
+                              isSelected:
+                                  _selectedMedicine?.id == 'custom_$query',
                               onTap: () => setState(() {
                                 _selectedMedicine =
-                                    _selectedMedicine?.id == m.id ? null : m;
+                                    _selectedMedicine?.id == 'custom_$query'
+                                        ? null
+                                        : Medicine(
+                                            id: 'custom_$query',
+                                            name: query,
+                                          );
                               }),
                             ),
-                          )),
-                    ] else if (_selectedMedicine != null) ...[
-                      const SizedBox(height: AppDimensions.paddingMd),
-                      _MedicineResultCard(
-                        medicine: _selectedMedicine!,
-                        isSelected: true,
-                        onTap: () =>
-                            setState(() => _selectedMedicine = null),
-                      ),
-                    ],
+                          );
+                        }
+                        if (_selectedMedicine != null) {
+                          return Padding(
+                            padding: const EdgeInsets.only(
+                                top: AppDimensions.paddingMd),
+                            child: _MedicineResultCard(
+                              medicine: _selectedMedicine!,
+                              isSelected: true,
+                              onTap: () =>
+                                  setState(() => _selectedMedicine = null),
+                            ),
+                          );
+                        }
+                        return const SizedBox.shrink();
+                      },
+                    ),
                     const SizedBox(height: AppDimensions.paddingXxl),
                     Text(
                       '복용 시간',
@@ -384,67 +418,34 @@ class _MedicineResultCard extends StatelessWidget {
         onTap: onTap,
         borderRadius: BorderRadius.circular(AppDimensions.radiusXl),
         child: Padding(
-          padding: const EdgeInsets.all(AppDimensions.paddingLg),
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppDimensions.paddingLg,
+            vertical: AppDimensions.paddingMd,
+          ),
           child: Row(
             children: [
-              Container(
-                width: 64,
-                height: 64,
-                decoration: BoxDecoration(
-                  color: AppColors.progressTealLight,
-                  borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
-                ),
-                child: medicine.imageUrl != null
-                    ? ClipRRect(
-                        borderRadius:
-                            BorderRadius.circular(AppDimensions.radiusMd),
-                        child: Image.network(medicine.imageUrl!,
-                            fit: BoxFit.cover),
-                      )
-                    : const Icon(Icons.medication_rounded,
-                        color: AppColors.progressTeal, size: 32),
-              ),
-              const SizedBox(width: AppDimensions.paddingLg),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       medicine.name,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
                         fontWeight: FontWeight.w700,
-                        fontSize: 16,
+                        fontSize: 14,
                       ),
                     ),
                     if (medicine.company != null) ...[
                       const SizedBox(height: 2),
                       Text(
                         medicine.company!,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                         style: const TextStyle(
                           color: AppColors.textSecondary,
-                          fontSize: 13,
-                        ),
-                      ),
-                    ],
-                    if (medicine.description != null) ...[
-                      const SizedBox(height: AppDimensions.paddingXs),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: AppDimensions.paddingSm,
-                          vertical: 3,
-                        ),
-                        decoration: BoxDecoration(
-                          color: AppColors.progressTealLight,
-                          borderRadius: BorderRadius.circular(
-                              AppDimensions.radiusPill),
-                        ),
-                        child: Text(
-                          medicine.description!,
-                          style: const TextStyle(
-                            color: AppColors.progressTeal,
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                          ),
+                          fontSize: 12,
                         ),
                       ),
                     ],
@@ -454,8 +455,8 @@ class _MedicineResultCard extends StatelessWidget {
               const SizedBox(width: AppDimensions.paddingSm),
               AnimatedContainer(
                 duration: const Duration(milliseconds: 200),
-                width: 40,
-                height: 40,
+                width: 36,
+                height: 36,
                 decoration: BoxDecoration(
                   color: isSelected
                       ? AppColors.progressTeal
@@ -465,9 +466,8 @@ class _MedicineResultCard extends StatelessWidget {
                 ),
                 child: Icon(
                   Icons.check_rounded,
-                  color:
-                      isSelected ? Colors.white : AppColors.textMuted,
-                  size: 22,
+                  color: isSelected ? Colors.white : AppColors.textMuted,
+                  size: 20,
                 ),
               ),
             ],
@@ -624,6 +624,120 @@ class _CounterButton extends StatelessWidget {
           width: 56,
           height: 56,
           child: Icon(icon, color: AppColors.textPrimary, size: 22),
+        ),
+      ),
+    );
+  }
+}
+
+class _DirectInputCard extends StatelessWidget {
+  const _DirectInputCard({
+    required this.name,
+    required this.isSelected,
+    required this.onTap,
+  });
+
+  final String name;
+  final bool isSelected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: AppColors.surface,
+      borderRadius: BorderRadius.circular(AppDimensions.radiusXl),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(AppDimensions.radiusXl),
+        child: Padding(
+          padding: const EdgeInsets.all(AppDimensions.paddingLg),
+          child: Row(
+            children: [
+              Container(
+                width: 64,
+                height: 64,
+                decoration: BoxDecoration(
+                  color: AppColors.background,
+                  borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
+                ),
+                child: const Icon(Icons.edit_rounded,
+                    color: AppColors.textSecondary, size: 28),
+              ),
+              const SizedBox(width: AppDimensions.paddingLg),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      name,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w700,
+                        fontSize: 16,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    const Text(
+                      '직접 입력',
+                      style: TextStyle(
+                        color: AppColors.textSecondary,
+                        fontSize: 13,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: isSelected
+                      ? AppColors.progressTeal
+                      : AppColors.background,
+                  borderRadius:
+                      BorderRadius.circular(AppDimensions.radiusMd),
+                ),
+                child: Icon(
+                  Icons.check_rounded,
+                  color: isSelected ? Colors.white : AppColors.textMuted,
+                  size: 22,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _SearchResultFrame extends StatelessWidget {
+  const _SearchResultFrame({required this.children});
+
+  final List<Widget> children;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.only(top: AppDimensions.paddingMd),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(AppDimensions.radiusXl),
+      ),
+      constraints: const BoxConstraints(maxHeight: 260),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(AppDimensions.radiusXl),
+        child: ListView.separated(
+          padding: const EdgeInsets.symmetric(vertical: AppDimensions.paddingSm),
+          shrinkWrap: true,
+          itemCount: children.length,
+          separatorBuilder: (_, __) => const Divider(
+            height: 1,
+            indent: 16,
+            endIndent: 16,
+            color: AppColors.divider,
+          ),
+          itemBuilder: (_, i) => children[i],
         ),
       ),
     );

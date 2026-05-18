@@ -18,15 +18,15 @@ class AdaptiveUIController extends _$AdaptiveUIController {
   }
 
   Future<void> setLevel(AdaptiveLevel level) async {
+    final settings = AdaptiveUISettings(level: level);
+    state = AsyncValue.data(settings);
+
     final prefs = await SharedPreferences.getInstance();
     await prefs.setInt(_kLevelKey, level.index);
-    state = AsyncData(AdaptiveUISettings(level: level));
   }
 
   Future<void> upgradeLevel() async {
-    final current = state.valueOrNull;
-    if (current == null || current.level == AdaptiveLevel.accessible) return;
-    await setLevel(AdaptiveLevel.values[current.level.index + 1]);
+    // 적응형 UI 비활성화 중
   }
 
   Future<void> resetLevel() async {
