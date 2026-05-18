@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/theme.dart';
 import '../../../core/utils.dart';
 import '../../../models/schedule.dart';
+import '../../../providers/adaptive_ui_provider.dart';
 import '../../medicine_detail/medicine_detail_screen.dart';
 
 /// 카드 비주얼 그룹. 슬롯/상태 조합으로 결정.
@@ -272,7 +274,7 @@ class _MedicineThumbnail extends StatelessWidget {
   }
 }
 
-class _ActionButton extends StatelessWidget {
+class _ActionButton extends ConsumerWidget {
   const _ActionButton({
     required this.style,
     required this.isTaken,
@@ -284,7 +286,13 @@ class _ActionButton extends StatelessWidget {
   final VoidCallback? onPressed;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final btnScale = ref
+        .watch(adaptiveUIControllerProvider)
+        .valueOrNull
+        ?.buttonScale ?? 1.0;
+    final btnHeight = 48.0 * btnScale;
+
     final shape = RoundedRectangleBorder(
       borderRadius: BorderRadius.circular(AppDimensions.radiusPill),
     );
@@ -292,7 +300,7 @@ class _ActionButton extends StatelessWidget {
     if (isTaken) {
       return SizedBox(
         width: double.infinity,
-        height: 48,
+        height: btnHeight,
         child: ElevatedButton.icon(
           onPressed: null,
           icon: const Icon(Icons.check_circle_rounded, size: 18),
@@ -329,7 +337,7 @@ class _ActionButton extends StatelessWidget {
 
     return SizedBox(
       width: double.infinity,
-      height: 48,
+      height: btnHeight,
       child: style.buttonOutlined
           ? OutlinedButton(
               onPressed: onPressed,

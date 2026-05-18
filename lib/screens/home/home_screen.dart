@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/theme.dart';
 import '../../models/schedule.dart';
+import '../../models/adaptive_ui_settings.dart';
+import '../../providers/adaptive_ui_provider.dart';
 import '../../providers/health_provider.dart';
 import '../../providers/hydration_provider.dart';
 import '../../providers/schedule_provider.dart';
@@ -22,6 +24,10 @@ class HomeScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final progress = ref.watch(todayProgressProvider);
     final schedules = ref.watch(todaySchedulesProvider);
+    final uiSettings = ref
+        .watch(adaptiveUIControllerProvider)
+        .valueOrNull
+        ?? const AdaptiveUISettings();
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -52,23 +58,25 @@ class HomeScreen extends ConsumerWidget {
                 children: [
                   const _Greeting(),
                   const SizedBox(height: AppDimensions.paddingXl),
-                  _ProgressSection(progress: progress),
-                  const SizedBox(height: AppDimensions.paddingXxl),
-                  SectionHeader(
-                    title: AppStrings.todayMedicine,
-                    actionLabel: AppStrings.fullSchedule,
-                    onActionPressed: () {},
-                  ),
+                  // 레벨 3에서는 진행 카드 숨김 — 인지 부하 감소
+                  if (!uiSettings.simplifiedLayout) ...[
+                    _ProgressSection(progress: progress),
+                    const SizedBox(height: AppDimensions.paddingXxl),
+                  ],
+                  const SectionHeader(title: AppStrings.todayMedicine),
                   const SizedBox(height: AppDimensions.paddingLg),
                   _MedicineList(
                     schedules: schedules,
                     onMarkTaken: (id) =>
                         ref.read(todaySchedulesProvider.notifier).markTaken(id),
                   ),
-                  const SizedBox(height: AppDimensions.paddingXxl),
-                  const SectionHeader(title: AppStrings.todayHealthSummary),
-                  const SizedBox(height: AppDimensions.paddingLg),
-                  const _HealthSection(),
+                  // 레벨 3에서는 건강 요약 숨김 — 핵심(복약)에만 집중
+                  if (!uiSettings.simplifiedLayout) ...[
+                    const SizedBox(height: AppDimensions.paddingXxl),
+                    const SectionHeader(title: AppStrings.todayHealthSummary),
+                    const SizedBox(height: AppDimensions.paddingLg),
+                    const _HealthSection(),
+                  ],
                 ],
               ),
             ),

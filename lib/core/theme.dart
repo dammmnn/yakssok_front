@@ -287,4 +287,26 @@ class AppTheme {
       ),
     );
   }
+
+  /// 레벨 3 고대비 테마 — 순흑/순백 기반으로 가독성 극대화.
+  static ThemeData get highContrast {
+    const scheme = ColorScheme.light(
+      primary: Color(0xFF0D9488),
+      surface: Colors.white,
+      error: Color(0xFFB91C1C),
+    );
+    return light.copyWith(
+      colorScheme: scheme,
+      scaffoldBackgroundColor: Colors.white,
+      textTheme: light.textTheme.apply(
+        bodyColor: Colors.black,
+        displayColor: Colors.black,
+      ),
+      appBarTheme: light.appBarTheme.copyWith(
+        backgroundColor: Colors.white,
+        foregroundColor: Colors.black,
+      ),
+      dividerColor: Colors.black26,
+    );
+  }
 }
